@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QApplication, QMainWindow
 
 # This file contains all the functionalities of the widgets between the windows
+#test
 
 class MainWindow(QMainWindow):
     def __init__(self):
