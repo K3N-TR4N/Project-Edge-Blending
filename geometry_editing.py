@@ -6,28 +6,34 @@ from matplotlib.patches import PathPatch
 from matplotlib.backend_bases import MouseButton
 
 import matplotlib
-import matplotlib.pyplot as plt
-
-def left_mouse_clicked(event):
-    if event.button is MouseButton.LEFT:
-        print('\nMouse Clicked!')
-        print('\nMouse X Data: ', event.xdata)
-        print('Mouse Y Data: ', event.ydata)
-        print('\nMouse X Coordinate: ', event.x)
-        print('Mouse Y Coordinate: ', event.y)
-
+import matplotlib.pyplot as plt        
 matplotlib.use('Qt5Agg')
 
-window_width = 1280
-window_height = 720
-boundary_size = 100
-boundaries_x = [0, 0, window_width, window_width, 0]
-boundaries_y = [window_height, 0, 0, window_height, window_height]
+class Ui_MainWindow(object):    
 
-class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1280, 720)
+
+        #######################################################
+
+        self.window_width = 1280
+        self.window_height = 720
+        self.boundary_size = 100
+        self.boundaries_x = [0, 0, self.window_width, self.window_width, 0]
+        self.boundaries_y = [self.window_height, 0, 0, self.window_height, self.window_height]
+
+        self.control_point_1_click_cursor_enable = False
+
+        self.control_point_1_click_count_parity = 0
+        self.control_point_2_click_count_parity = 0
+        self.control_point_3_click_count_parity = 0
+        self.control_point_4_click_count_parity = 0
+
+        #######################################################
+
+        MainWindow.setObjectName("Geometry Editing - Planaterarium Edge")
+        MainWindow.resize(self.window_width, self.window_height)
+        
+        #######################################################
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.frame_1 = QtWidgets.QFrame(self.centralwidget)
@@ -47,9 +53,9 @@ class Ui_MainWindow(object):
         figure, self.axes = plt.subplots()
         self.canvas = FigureCanvasQTAgg(figure)
 
-        control_points_1 = [(float(0 * window_width), float(0 * window_height)), (float(0.5 * window_width), float(0.5 * window_height)), (float(0 * window_width), float(1 * window_height)), (float(0 * window_width), float(1 * window_height))]
-        control_points_2 = [(float(0 * window_width), float(1 * window_height)), (float(0.5 * window_width), float(0 * window_height)), (float(1 * window_width), float(1 * window_height)), (float(1 * window_width), float(1 * window_height))]
-        control_points_3 = [(float(1 * window_width), float(0 * window_height)), (float(0.5 * window_width), float(0.5 * window_height)), (float(1 * window_width), float(1 * window_height)), (float(1 * window_width), float(1 * window_height))]
+        control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
+        control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+        control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
         
         initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
 
@@ -68,26 +74,25 @@ class Ui_MainWindow(object):
             self.axes.add_patch(self.bezier_curves[curve])
         #'''
 
-        plt.connect('button_press_event', left_mouse_clicked)
+        self.cid = plt.connect('button_press_event', self.left_mouse_clicked)
 
         self.horizontalLayout_1.addWidget(self.canvas)
 
         #####################################################################
 
         self.frame_2 = QtWidgets.QFrame(self.centralwidget)
-        self.frame_2.setGeometry(QtCore.QRect(850, 90, 401, 481))
+        self.frame_2.setGeometry(QtCore.QRect(870, 90, 331, 481))
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
         self.verticalLayoutWidget = QtWidgets.QWidget(self.frame_2)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 401, 231))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 331, 191))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout_1 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout_1.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_1.setObjectName("verticalLayout_1")
         self.comboBox_1 = QtWidgets.QComboBox(self.verticalLayoutWidget)
         self.comboBox_1.setObjectName("comboBox_1")
-        self.verticalLayout_1.addWidget(self.comboBox_1)
 
         #####################################################################
         
@@ -112,6 +117,7 @@ class Ui_MainWindow(object):
 
         #####################################################################
 
+        self.verticalLayout_1.addWidget(self.comboBox_1)
         self.gridLayout_1 = QtWidgets.QGridLayout()
         self.gridLayout_1.setObjectName("gridLayout_1")
         self.gridLayout_3 = QtWidgets.QGridLayout()
@@ -182,38 +188,13 @@ class Ui_MainWindow(object):
             self.lineEdit_4.setText(str(first_curve_control_points[3][0]))
             self.lineEdit_8.setText(str(first_curve_control_points[3][1]))
 
-            self.redraw_canvas(remove_curve = False)
+            self.redraw_canvas()
         
         self.comboBox_2.currentTextChanged.connect(self.selected_curve_changed)
 
         #####################################################################
 
         self.gridLayout_1.addWidget(self.comboBox_2, 0, 1, 1, 1)
-        self.gridLayout_2 = QtWidgets.QGridLayout()
-        self.gridLayout_2.setObjectName("gridLayout_2")
-        self.label_1 = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label_1.setObjectName("label_1")
-        self.gridLayout_2.addWidget(self.label_1, 0, 0, 1, 1)
-        self.label_3 = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label_3.setObjectName("label_3")
-        self.gridLayout_2.addWidget(self.label_3, 2, 0, 1, 1)
-        self.label_2 = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout_2.addWidget(self.label_2, 1, 0, 1, 1)
-        self.label_4 = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label_4.setObjectName("label_4")
-        self.gridLayout_2.addWidget(self.label_4, 3, 0, 1, 1)
-        self.pushButton_5 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton_5.setObjectName("pushButton_5")
-
-        ####################################################################
-
-        self.pushButton_5.clicked.connect(self.set_control_points)
-
-        ####################################################################
-
-        self.gridLayout_2.addWidget(self.pushButton_5, 4, 0, 1, 1)
-        self.gridLayout_1.addLayout(self.gridLayout_2, 1, 1, 1, 1)
         self.gridLayout_8 = QtWidgets.QGridLayout()
         self.gridLayout_8.setObjectName("gridLayout_8")
         self.label_10 = QtWidgets.QLabel(self.verticalLayoutWidget)
@@ -223,6 +204,59 @@ class Ui_MainWindow(object):
         self.label_9.setObjectName("label_9")
         self.gridLayout_8.addWidget(self.label_9, 0, 1, 1, 1)
         self.gridLayout_1.addLayout(self.gridLayout_8, 0, 2, 1, 1)
+        self.gridLayout_2 = QtWidgets.QGridLayout()
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.pushButton_7 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_7.setObjectName("pushButton_7")
+
+        ####################################################################
+
+        self.pushButton_7.clicked.connect(self.set_control_points)
+
+        ####################################################################
+
+        self.gridLayout_2.addWidget(self.pushButton_7, 4, 0, 1, 1)
+        self.pushButton_3 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_3.setObjectName("pushButton_3")
+
+        ####################################################################
+
+        self.pushButton_3.clicked.connect(self.control_point_1_clicked)
+
+        ####################################################################
+
+        self.gridLayout_2.addWidget(self.pushButton_3, 0, 0, 1, 1)
+        self.pushButton_4 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_4.setObjectName("pushButton_4")
+
+        ####################################################################
+
+        self.pushButton_4.clicked.connect(self.control_point_2_clicked)
+
+        ####################################################################
+
+        self.gridLayout_2.addWidget(self.pushButton_4, 1, 0, 1, 1)
+        self.pushButton_5 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_5.setObjectName("pushButton_5")
+
+        ####################################################################
+
+        self.pushButton_5.clicked.connect(self.control_point_3_clicked)
+
+        ####################################################################
+
+        self.gridLayout_2.addWidget(self.pushButton_5, 2, 0, 1, 1)
+        self.pushButton_6 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_6.setObjectName("pushButton_6")
+
+        ####################################################################
+
+        self.pushButton_6.clicked.connect(self.control_point_4_clicked)
+
+        ####################################################################
+
+        self.gridLayout_2.addWidget(self.pushButton_6, 3, 0, 1, 1)
+        self.gridLayout_1.addLayout(self.gridLayout_2, 1, 1, 1, 1)
         self.verticalLayout_1.addLayout(self.gridLayout_1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -238,40 +272,39 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Geometry Editing - Edge Blending"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton_2.setText(_translate("MainWindow", "Remove curve"))
         self.pushButton_1.setText(_translate("MainWindow", "Add new curve"))
-        self.label_1.setText(_translate("MainWindow", "Control Point 1"))
-        self.label_3.setText(_translate("MainWindow", "Control Point 3"))
-        self.label_2.setText(_translate("MainWindow", "Control Point 2"))
-        self.label_4.setText(_translate("MainWindow", "Control Point 4"))
-        self.pushButton_5.setText(_translate("MainWindow", "Set Control Points"))
         self.label_10.setText(_translate("MainWindow", "X"))
         self.label_9.setText(_translate("MainWindow", "Y"))
+        self.pushButton_5.setText(_translate("MainWindow", "Control Point 3"))
+        self.pushButton_7.setText(_translate("MainWindow", "Set Control Points"))
+        self.pushButton_3.setText(_translate("MainWindow", "Control Point 1"))
+        self.pushButton_4.setText(_translate("MainWindow", "Control Point 2"))
+        self.pushButton_6.setText(_translate("MainWindow", "Control Point 4"))
 
     ###########################################################
     
-    def redraw_canvas(self, remove_curve):
+    def redraw_canvas(self):
         self.axes.clear()
-
-        #if remove_curve == False:
         
+        self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
+
         if self.comboBox_2.currentText() != 'No Curves':
             for control_points in self.control_points_list[self.comboBox_2.currentText()]:
-                self.axes.plot(control_points[0], control_points[1], 'ko')
+                self.axes.plot(control_points[0], control_points[1], 'ro')
 
         for curve in self.bezier_curves:
             if curve == self.comboBox_2.currentText():
-                self.bezier_curves[curve].set(edgecolor = 'r')
+                self.bezier_curves[curve].set(edgecolor = 'r', fc = 'r')
             else:
-                self.bezier_curves[curve].set(edgecolor = 'k')
+                self.bezier_curves[curve].set(edgecolor = 'k', fc = 'k')
             self.axes.add_patch(self.bezier_curves[curve])
 
 
-        self.axes.set_xlim((0 - boundary_size, window_width + boundary_size))
-        self.axes.set_ylim((0 - boundary_size, window_height + boundary_size))
+        self.axes.set_xlim((0 - self.boundary_size, self.window_width + self.boundary_size))
+        self.axes.set_ylim((0 - self.boundary_size, self.window_height + self.boundary_size))
         self.axes.grid(color = 'k')
-        self.axes.plot(boundaries_x, boundaries_y, linestyle = '--', color = 'b')
         self.canvas.draw() 
 
     def set_control_points(self):      
@@ -291,7 +324,7 @@ class Ui_MainWindow(object):
             self.control_points_list[self.comboBox_2.currentText()] = new_control_points
             self.bezier_curves[self.comboBox_2.currentText()] = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none')
 
-            self.redraw_canvas(remove_curve = False)
+            self.redraw_canvas()
         
     def add_new_curve_clicked(self):
 
@@ -355,8 +388,7 @@ class Ui_MainWindow(object):
             '''
 
             curve_numbers = []
-
-
+            
             '''
             for index in range(self.index):
                 curve_numbers.append(str(index + 1))
@@ -379,7 +411,7 @@ class Ui_MainWindow(object):
             print(self.bezier_curves)
             '''
 
-            self.redraw_canvas(remove_curve = True)
+            self.redraw_canvas()
 
 
     def selected_curve_changed(self):
@@ -398,10 +430,92 @@ class Ui_MainWindow(object):
             self.lineEdit_4.setText(str(selected_curve_control_points[3][0]))
             self.lineEdit_8.setText(str(selected_curve_control_points[3][1]))
 
-            self.redraw_canvas(remove_curve = False)        
+            self.redraw_canvas()        
+
+
+    def control_point_1_clicked(self):
+        
+        self.control_point_1_click_count_parity = self.control_point_1_click_count_parity + 1
+
+        if self.control_point_1_click_count_parity % 2 == 0:            
+            self.pushButton_4.setEnabled(True)
+            self.pushButton_5.setEnabled(True)
+            self.pushButton_6.setEnabled(True)
+            self.control_point_1_click_cursor_enable = False
+            self.control_point_1_click_count_parity == 0
+        else:
+            self.pushButton_4.setEnabled(False)
+            self.pushButton_5.setEnabled(False)
+            self.pushButton_6.setEnabled(False)
+            self.control_point_1_click_cursor_enable = True
+    
+    def control_point_2_clicked(self):
+
+        self.control_point_2_click_count_parity = self.control_point_2_click_count_parity + 1
+
+        if self.control_point_2_click_count_parity % 2 == 0:
+            self.pushButton_3.setEnabled(True)
+            self.pushButton_5.setEnabled(True)
+            self.pushButton_6.setEnabled(True)
+            self.control_point_2_click_cursor_enable = False
+            self.control_point_2_click_count_parity == 0
+        else:
+            self.pushButton_3.setEnabled(False)
+            self.pushButton_5.setEnabled(False)
+            self.pushButton_6.setEnabled(False)
+            self.control_point_2_click_cursor_enable = True
+
+    def control_point_3_clicked(self):
+
+        self.control_point_3_click_count_parity = self.control_point_3_click_count_parity + 1
+
+        if self.control_point_3_click_count_parity % 2 == 0:
+            self.pushButton_3.setEnabled(True)
+            self.pushButton_4.setEnabled(True)
+            self.pushButton_6.setEnabled(True)        
+            self.control_point_3_click_cursor_enable = False
+            self.control_point_3_click_count_parity == 0
+        else:
+            self.pushButton_3.setEnabled(False)
+            self.pushButton_4.setEnabled(False)
+            self.pushButton_6.setEnabled(False)
+            self.control_point_3_click_cursor_enable = True
+    
+    def control_point_4_clicked(self):
+
+        self.control_point_4_click_count_parity = self.control_point_4_click_count_parity + 1
+
+        if self.control_point_4_click_count_parity % 2 == 0:
+            self.pushButton_3.setEnabled(True)
+            self.pushButton_4.setEnabled(True)
+            self.pushButton_5.setEnabled(True)        
+            self.control_point_4_click_cursor_enable = False
+            self.control_point_4_click_count_parity == 0
+        else:
+            self.pushButton_3.setEnabled(False)
+            self.pushButton_4.setEnabled(False)
+            self.pushButton_5.setEnabled(False)
+            self.control_point_4_click_cursor_enable = True
+
+    def left_mouse_clicked(self, event):
+        if event.button == MouseButton.LEFT:
+            if self.control_point_1_click_cursor_enable:
+                self.lineEdit_1.setText(str(round(event.xdata, 2)))
+                self.lineEdit_5.setText(str(round(event.ydata, 2)))
+
+            elif self.control_point_2_click_cursor_enable:
+                self.lineEdit_2.setText(str(round(event.xdata, 2)))
+                self.lineEdit_6.setText(str(round(event.ydata, 2)))
+
+            elif self.control_point_3_click_cursor_enable:
+                self.lineEdit_3.setText(str(round(event.xdata, 2)))
+                self.lineEdit_7.setText(str(round(event.ydata, 2)))
+            
+            elif self.control_point_4_click_cursor_enable:
+                self.lineEdit_4.setText(str(round(event.xdata, 2)))
+                self.lineEdit_8.setText(str(round(event.ydata, 2)))
 
     ###########################################################
-
 
 if __name__ == "__main__":
     import sys
