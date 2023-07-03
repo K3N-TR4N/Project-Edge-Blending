@@ -22,11 +22,23 @@ class Ui_MainWindow(object):
         self.boundaries_y = [self.window_height, 0, 0, self.window_height, self.window_height]
 
         self.control_point_1_click_cursor_enable = False
+        self.control_point_2_click_cursor_enable = False
+        self.control_point_3_click_cursor_enable = False
+        self.control_point_4_click_cursor_enable = False
 
         self.control_point_1_click_count_parity = 0
         self.control_point_2_click_count_parity = 0
         self.control_point_3_click_count_parity = 0
         self.control_point_4_click_count_parity = 0
+
+        self.contrast_curve_click_count_parity = 0
+        self.contrast_curve = False
+
+        self.show_areas_click_count_parity = 0
+        self.show_areas = False
+
+        self.show_control_points_click_count_parity = 0
+        self.show_control_points = False
 
         #######################################################
 
@@ -61,6 +73,7 @@ class Ui_MainWindow(object):
 
         self.control_points_list = {}
         self.bezier_curves = {}
+        self.line_areas = {}
 
         self.index = 0
 
@@ -68,13 +81,13 @@ class Ui_MainWindow(object):
         for control_points in initial_sets_of_control_points:
             self.index = self.index + 1
             self.control_points_list['Curve ' + str(self.index)] = control_points
-            self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none')
+            self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
             
         for curve in self.bezier_curves:
             self.axes.add_patch(self.bezier_curves[curve])
         #'''
 
-        self.cid = plt.connect('button_press_event', self.left_mouse_clicked)
+        self.cid = plt.connect('button_press_event', self.leftMouseClicked)
 
         self.horizontalLayout_1.addWidget(self.canvas)
 
@@ -133,8 +146,8 @@ class Ui_MainWindow(object):
 
         #####################################################################
     
-        self.pushButton_1.clicked.connect(self.add_new_curve_clicked)
-        self.pushButton_2.clicked.connect(self.remove_curve_clicked)
+        self.pushButton_1.clicked.connect(self.addNewCurveClicked)
+        self.pushButton_2.clicked.connect(self.removeCurveClicked)
 
         #####################################################################
 
@@ -188,21 +201,21 @@ class Ui_MainWindow(object):
             self.lineEdit_4.setText(str(first_curve_control_points[3][0]))
             self.lineEdit_8.setText(str(first_curve_control_points[3][1]))
 
-            self.redraw_canvas()
+            self.redrawCanvas()
         
-        self.comboBox_2.currentTextChanged.connect(self.selected_curve_changed)
+        self.comboBox_2.currentTextChanged.connect(self.selectedCurveChanged)
 
         #####################################################################
 
         self.gridLayout_1.addWidget(self.comboBox_2, 0, 1, 1, 1)
         self.gridLayout_8 = QtWidgets.QGridLayout()
         self.gridLayout_8.setObjectName("gridLayout_8")
-        self.label_10 = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label_10.setObjectName("label_10")
-        self.gridLayout_8.addWidget(self.label_10, 0, 0, 1, 1)
-        self.label_9 = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label_9.setObjectName("label_9")
-        self.gridLayout_8.addWidget(self.label_9, 0, 1, 1, 1)
+        self.label_1 = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label_1.setObjectName("label_1")
+        self.gridLayout_8.addWidget(self.label_1, 0, 0, 1, 1)
+        self.label_2 = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout_8.addWidget(self.label_2, 0, 1, 1, 1)
         self.gridLayout_1.addLayout(self.gridLayout_8, 0, 2, 1, 1)
         self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setObjectName("gridLayout_2")
@@ -211,7 +224,7 @@ class Ui_MainWindow(object):
 
         ####################################################################
 
-        self.pushButton_7.clicked.connect(self.set_control_points)
+        self.pushButton_7.clicked.connect(self.setControlPoints)
 
         ####################################################################
 
@@ -221,7 +234,7 @@ class Ui_MainWindow(object):
 
         ####################################################################
 
-        self.pushButton_3.clicked.connect(self.control_point_1_clicked)
+        self.pushButton_3.clicked.connect(self.controlPoint1Clicked)
 
         ####################################################################
 
@@ -231,7 +244,7 @@ class Ui_MainWindow(object):
 
         ####################################################################
 
-        self.pushButton_4.clicked.connect(self.control_point_2_clicked)
+        self.pushButton_4.clicked.connect(self.controlPoint2Clicked)
 
         ####################################################################
 
@@ -241,7 +254,7 @@ class Ui_MainWindow(object):
 
         ####################################################################
 
-        self.pushButton_5.clicked.connect(self.control_point_3_clicked)
+        self.pushButton_5.clicked.connect(self.controlPoint3Clicked)
 
         ####################################################################
 
@@ -251,13 +264,88 @@ class Ui_MainWindow(object):
 
         ####################################################################
 
-        self.pushButton_6.clicked.connect(self.control_point_4_clicked)
+        self.pushButton_6.clicked.connect(self.controlPoint4Clicked)
 
         ####################################################################
 
         self.gridLayout_2.addWidget(self.pushButton_6, 3, 0, 1, 1)
         self.gridLayout_1.addLayout(self.gridLayout_2, 1, 1, 1, 1)
         self.verticalLayout_1.addLayout(self.gridLayout_1)
+        self.horizontalLayoutWidget_2 = QtWidgets.QWidget(self.frame_2)
+        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(0, 260, 331, 92))
+        self.horizontalLayoutWidget_2.setObjectName("horizontalLayoutWidget_2")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_2)
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.label_3 = QtWidgets.QLabel(self.horizontalLayoutWidget_2)
+        self.label_3.setObjectName("label_3")
+        self.verticalLayout_2.addWidget(self.label_3)
+        self.gridLayout_5 = QtWidgets.QGridLayout()
+        self.gridLayout_5.setObjectName("gridLayout_5")
+        self.pushButton_8 = QtWidgets.QPushButton(self.horizontalLayoutWidget_2)
+        self.pushButton_8.setObjectName("pushButton_8")
+        self.gridLayout_5.addWidget(self.pushButton_8, 0, 0, 1, 1)
+        self.pushButton_9 = QtWidgets.QPushButton(self.horizontalLayoutWidget_2)
+        self.pushButton_9.setObjectName("pushButton_9")
+        self.gridLayout_5.addWidget(self.pushButton_9, 0, 1, 1, 1)
+        self.pushButton_10 = QtWidgets.QPushButton(self.horizontalLayoutWidget_2)
+        self.pushButton_10.setObjectName("pushButton_10")
+        self.gridLayout_5.addWidget(self.pushButton_10, 1, 0, 1, 1)
+        self.pushButton_11 = QtWidgets.QPushButton(self.horizontalLayoutWidget_2)
+        self.pushButton_11.setObjectName("pushButton_11")
+        self.gridLayout_5.addWidget(self.pushButton_11, 1, 1, 1, 1)
+
+        ###########################################################################
+
+        self.pushButton_8.clicked.connect(self.fillLineAreaLeft)
+        self.pushButton_9.clicked.connect(self.fillLineAreaRight)
+        self.pushButton_10.clicked.connect(self.fillLineAreaAbove)
+        self.pushButton_11.clicked.connect(self.fillLineAreaBelow)
+
+        self.pushButton_8.setEnabled(False)
+        self.pushButton_9.setEnabled(False)
+        self.pushButton_10.setEnabled(False)
+        self.pushButton_11.setEnabled(False)
+
+        ###########################################################################
+
+        self.verticalLayout_2.addLayout(self.gridLayout_5)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_2)
+        self.horizontalLayoutWidget_3 = QtWidgets.QWidget(self.frame_2)
+        self.horizontalLayoutWidget_3.setGeometry(QtCore.QRect(0, 390, 331, 92))
+        self.horizontalLayoutWidget_3.setObjectName("horizontalLayoutWidget_3")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_3)
+        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.label_4 = QtWidgets.QLabel(self.horizontalLayoutWidget_3)
+        self.label_4.setObjectName("label_4")
+        self.verticalLayout_3.addWidget(self.label_4)
+        self.pushButton_12 = QtWidgets.QPushButton(self.horizontalLayoutWidget_3)
+        self.pushButton_12.setObjectName("pushButton_12")
+        self.verticalLayout_3.addWidget(self.pushButton_12)
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.pushButton_13 = QtWidgets.QPushButton(self.horizontalLayoutWidget_3)
+        self.pushButton_13.setObjectName("pushButton_13")
+        self.horizontalLayout_4.addWidget(self.pushButton_13)
+        self.pushButton_14 = QtWidgets.QPushButton(self.horizontalLayoutWidget_3)
+        self.pushButton_14.setObjectName("pushButton_14")
+        self.horizontalLayout_4.addWidget(self.pushButton_14)
+
+        ##########################################################
+
+        self.pushButton_12.clicked.connect(self.contrastCurveClicked)
+        self.pushButton_13.clicked.connect(self.showAreas)
+        self.pushButton_14.clicked.connect(self.showControlPoints)
+
+        ##########################################################
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_4)
+        self.horizontalLayout_3.addLayout(self.verticalLayout_3)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1280, 26))
@@ -272,42 +360,75 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Geometry Editing - Planaterium Edge Blend"))
         self.pushButton_2.setText(_translate("MainWindow", "Remove curve"))
         self.pushButton_1.setText(_translate("MainWindow", "Add new curve"))
-        self.label_10.setText(_translate("MainWindow", "X"))
-        self.label_9.setText(_translate("MainWindow", "Y"))
+        self.label_2.setText(_translate("MainWindow", "Y"))
+        self.label_1.setText(_translate("MainWindow", "X"))
         self.pushButton_5.setText(_translate("MainWindow", "Control Point 3"))
         self.pushButton_7.setText(_translate("MainWindow", "Set Control Points"))
         self.pushButton_3.setText(_translate("MainWindow", "Control Point 1"))
         self.pushButton_4.setText(_translate("MainWindow", "Control Point 2"))
         self.pushButton_6.setText(_translate("MainWindow", "Control Point 4"))
+        self.label_3.setText(_translate("MainWindow", "Settings for Filling Area for Lines"))
+        self.pushButton_8.setText(_translate("MainWindow", "Left of Line"))
+        self.pushButton_9.setText(_translate("MainWindow", "Right of Line"))
+        self.pushButton_10.setText(_translate("MainWindow", "Above Line"))
+        self.pushButton_11.setText(_translate("MainWindow", "Below Line"))
+        self.label_4.setText(_translate("MainWindow", "Mask Display Settings"))
+        self.pushButton_12.setText(_translate("MainWindow", "Show Selected Curve in Contrast"))
+        self.pushButton_13.setText(_translate("MainWindow", "Show Curve Areas"))
+        self.pushButton_14.setText(_translate("MainWindow", "Show Control Points"))
 
     ###########################################################
     
-    def redraw_canvas(self):
+    def redrawCanvas(self):
         self.axes.clear()
-        
+
         self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
 
-        if self.comboBox_2.currentText() != 'No Curves':
+        if self.comboBox_2.currentText() != 'No Curves' and self.show_control_points == True:
             for control_points in self.control_points_list[self.comboBox_2.currentText()]:
                 self.axes.plot(control_points[0], control_points[1], 'ro')
 
         for curve in self.bezier_curves:
-            if curve == self.comboBox_2.currentText():
-                self.bezier_curves[curve].set(edgecolor = 'r', fc = 'r')
+            if curve == self.comboBox_2.currentText() and self.contrast_curve == True and self.show_areas == True:
+                self.bezier_curves[curve].set(edgecolor = 'r', facecolor = 'r')
+            elif curve == self.comboBox_2.currentText() and self.contrast_curve == True and self.show_areas == False:
+                self.bezier_curves[curve].set(edgecolor = 'r', facecolor = 'None')
+            elif curve == self.comboBox_2.currentText() and self.contrast_curve == False and self.show_areas == True:
+                self.bezier_curves[curve].set(edgecolor = 'k', facecolor = 'k')
             else:
-                self.bezier_curves[curve].set(edgecolor = 'k', fc = 'k')
+                if self.show_areas == True:
+                    self.bezier_curves[curve].set(edgecolor = 'k', facecolor = 'k')
+                else:
+                    self.bezier_curves[curve].set(edgecolor = 'k', facecolor = 'None')
             self.axes.add_patch(self.bezier_curves[curve])
 
+        for area in self.line_areas:
+            if area == self.comboBox_2.currentText() and self.contrast_curve == True and self.show_areas == True:
+                self.line_areas[area].set(edgecolor = 'r', facecolor = 'r')
+            elif area == self.comboBox_2.currentText() and self.contrast_curve == True and self.show_areas == False:
+                self.line_areas[area].set(edgecolor = 'r', facecolor = 'None')
+            elif area == self.comboBox_2.currentText() and self.contrast_curve == False and self.show_areas == True:
+                self.line_areas[area].set(edgecolor = 'k', facecolor = 'k')
+            else:
+                if self.show_areas == True:
+                    self.line_areas[area].set(edgecolor = 'k', facecolor = 'k')
+                else:
+                    self.line_areas[area].set(edgecolor = 'k', facecolor = 'None')
+            self.axes.add_patch(self.line_areas[area])
 
         self.axes.set_xlim((0 - self.boundary_size, self.window_width + self.boundary_size))
         self.axes.set_ylim((0 - self.boundary_size, self.window_height + self.boundary_size))
         self.axes.grid(color = 'k')
         self.canvas.draw() 
 
-    def set_control_points(self):      
+    def setControlPoints(self):      
+        #   Control Point 1 and Control 4 cannot be at the same point if Control Point 2 and Control Point 3 are same
+        #   All four control points cannot have the same coordinate
+        #   Control Point 1 and Control 4 have to be on the boundary lines
+
         if self.comboBox_2.currentText() == 'No Curves':
             return
         else:
@@ -322,11 +443,19 @@ class Ui_MainWindow(object):
 
             new_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
             self.control_points_list[self.comboBox_2.currentText()] = new_control_points
-            self.bezier_curves[self.comboBox_2.currentText()] = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none')
+            self.bezier_curves[self.comboBox_2.currentText()] = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
 
-            self.redraw_canvas()
+            if self.comboBox_2.currentText() in self.line_areas:
+                del self.line_areas[self.comboBox_2.currentText()]
+
+            self.redrawCanvas()
+
+            self.evaluateLineCurve(line_name = self.comboBox_2.currentText(), new_control_points = new_control_points)
         
-    def add_new_curve_clicked(self):
+            '''
+            '''
+        
+    def addNewCurveClicked(self):
 
         '''
         print('\nBefore new curve')
@@ -345,25 +474,142 @@ class Ui_MainWindow(object):
         new_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
 
         new_bezier_curve = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none')
-        self.index = self.index + 1
-        self.control_points_list['Curve ' + str(self.index)] = new_control_points
-        self.bezier_curves['Curve ' + str(self.index)] = new_bezier_curve
+        
+        new_bezier_curve_name = 'Curve ' + str(len(self.control_points_list) + 1)
+        self.control_points_list[new_bezier_curve_name] = new_control_points
+        self.bezier_curves[new_bezier_curve_name] = new_bezier_curve
 
-        self.comboBox_2.addItem('Curve ' + str(self.index))
+        self.comboBox_2.addItem(new_bezier_curve_name)
         self.axes.add_patch(new_bezier_curve)
         self.canvas.draw()
 
         if self.comboBox_2.currentText() == 'No Curves':
             self.comboBox_2.removeItem(self.comboBox_2.currentIndex())
         else:
-            self.comboBox_2.setCurrentText('Curve ' + str(self.index))
+            self.comboBox_2.setCurrentText('Curve ' + str(len(self.control_points_list)))
 
         '''
         print('\nAfter new curve')
         print(self.control_points_list)
         '''
 
-    def remove_curve_clicked(self):
+        self.evaluateLineCurve(line_name = new_bezier_curve_name, new_control_points = new_control_points)
+
+    def evaluateLineCurve(self, line_name, new_control_points):
+
+        if len(set(new_control_points)) == 2:
+            self.pushButton_1.setEnabled(False)
+            self.pushButton_2.setEnabled(False)
+
+            self.pushButton_3.setEnabled(False)
+            self.pushButton_4.setEnabled(False)
+            self.pushButton_5.setEnabled(False)
+            self.pushButton_6.setEnabled(False)
+            
+            self.pushButton_7.setEnabled(False)
+
+            self.comboBox_2.setEnabled(False)
+
+            self.line_control_point_name = line_name
+            self.line_control_point_1 = new_control_points[0]
+            self.line_control_point_4 = new_control_points[3]
+
+            if self.line_control_point_1[1] == self.line_control_point_4[1]:
+                self.pushButton_8.setEnabled(False)
+                self.pushButton_9.setEnabled(False)
+                self.pushButton_10.setEnabled(True)
+                self.pushButton_11.setEnabled(True)
+            else:
+                self.pushButton_8.setEnabled(True)
+                self.pushButton_9.setEnabled(True)
+                self.pushButton_10.setEnabled(False)
+                self.pushButton_11.setEnabled(False)
+
+    
+    def fillLineAreaLeft(self):
+        if self.line_control_point_1[1] == 0:                
+            control_points_line_area = [(0.0, float(self.window_height)), 
+                                        (0.0, 0.0), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (0.0, float(self.window_height))]
+        else:
+            control_points_line_area = [(0.0, float(self.window_height)), 
+                                        (0.0, 0.0), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (0.0, float(self.window_height))]
+        self.makeFillArea(control_points_line_area)
+            
+    def fillLineAreaRight(self):
+        if self.line_control_point_1[1] == 0:
+            control_points_line_area = [(float(self.window_width), float(self.window_height)), 
+                                        (float(self.window_width), 0.0), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (float(self.window_width), float(self.window_height))]
+        else:
+            control_points_line_area = [(float(self.window_width), float(self.window_height)), 
+                                        (float(self.window_width), 0.0), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (float(self.window_width), float(self.window_height))]
+        self.makeFillArea(control_points_line_area)
+
+    def fillLineAreaAbove(self):
+        if self.line_control_point_1[0] == 0:
+            control_points_line_area = [(0.0, float(self.window_height)), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (float(self.window_width), float(self.window_height)),
+                                        (0.0, float(self.window_height))]
+        else:
+            control_points_line_area = [(0.0, float(self.window_height)), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (float(self.window_width), float(self.window_height)),
+                                        (0.0, float(self.window_height))]
+        self.makeFillArea(control_points_line_area)
+
+    def fillLineAreaBelow(self):
+        if self.line_control_point_1[0] == 0:
+            control_points_line_area = [(0.0, 0.0), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (float(self.window_width), 0.0),
+                                        (0.0, 0.0)]
+        else:
+            control_points_line_area = [(0.0, 0.0), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (float(self.window_width), 0.0),
+                                        (0.0, 0.0)]
+        self.makeFillArea(control_points_line_area)
+            
+    def makeFillArea(self, control_points_line_area):
+                
+            self.pushButton_8.setEnabled(False)
+            self.pushButton_9.setEnabled(False)
+            self.pushButton_10.setEnabled(False)
+            self.pushButton_11.setEnabled(False)
+
+            self.line_areas[self.line_control_point_name] = PathPatch(Path(control_points_line_area, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), fc = 'r', transform=self.axes.transData)
+
+            self.redrawCanvas()
+
+            self.pushButton_1.setEnabled(True)
+            self.pushButton_2.setEnabled(True)
+
+            self.pushButton_3.setEnabled(True)
+            self.pushButton_4.setEnabled(True)
+            self.pushButton_5.setEnabled(True)
+            self.pushButton_6.setEnabled(True)
+
+            self.pushButton_7.setEnabled(True)
+
+            self.comboBox_2.setEnabled(True)
+
+    def removeCurveClicked(self):
 
         if self.comboBox_2.currentText() == 'No Curves':
             return
@@ -372,21 +618,9 @@ class Ui_MainWindow(object):
             print('\nBefore new curve')
             print(self.control_points_list)
             print(self.bezier_curves)
+            print(self.line_areas)
             '''  
-
-            '''
-            user_control_point_1_x = float(self.lineEdit_1.text())
-            user_control_point_2_x = float(self.lineEdit_2.text())
-            user_control_point_3_x = float(self.lineEdit_3.text())
-            user_control_point_4_x = float(self.lineEdit_4.text())
-            user_control_point_1_y = float(self.lineEdit_5.text())
-            user_control_point_2_y = float(self.lineEdit_6.text())
-            user_control_point_3_y = float(self.lineEdit_7.text())
-            user_control_point_4_y = float(self.lineEdit_8.text())
-
-            remove_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
-            '''
-
+            
             curve_numbers = []
             
             '''
@@ -400,21 +634,25 @@ class Ui_MainWindow(object):
             del self.control_points_list[self.comboBox_2.currentText()]
             del self.bezier_curves[self.comboBox_2.currentText()]
 
+            if self.comboBox_2.currentText() in self.line_areas:
+                del self.line_areas[self.comboBox_2.currentText()]
+
             if not self.bezier_curves.keys():
                 self.comboBox_2.addItem('No Curves')
-            
+
             self.comboBox_2.removeItem(self.comboBox_2.currentIndex())
 
             '''
             print('\nAfter new curve')
             print(self.control_points_list)
             print(self.bezier_curves)
+            print(self.line_areas)
             '''
 
-            self.redraw_canvas()
+            self.redrawCanvas()
 
 
-    def selected_curve_changed(self):
+    def selectedCurveChanged(self):
 
         if self.comboBox_2.currentText() == 'No Curves':
             return
@@ -430,10 +668,10 @@ class Ui_MainWindow(object):
             self.lineEdit_4.setText(str(selected_curve_control_points[3][0]))
             self.lineEdit_8.setText(str(selected_curve_control_points[3][1]))
 
-            self.redraw_canvas()        
+            self.redrawCanvas()        
 
 
-    def control_point_1_clicked(self):
+    def controlPoint1Clicked(self):
         
         self.control_point_1_click_count_parity = self.control_point_1_click_count_parity + 1
 
@@ -449,7 +687,7 @@ class Ui_MainWindow(object):
             self.pushButton_6.setEnabled(False)
             self.control_point_1_click_cursor_enable = True
     
-    def control_point_2_clicked(self):
+    def controlPoint2Clicked(self):
 
         self.control_point_2_click_count_parity = self.control_point_2_click_count_parity + 1
 
@@ -465,7 +703,7 @@ class Ui_MainWindow(object):
             self.pushButton_6.setEnabled(False)
             self.control_point_2_click_cursor_enable = True
 
-    def control_point_3_clicked(self):
+    def controlPoint3Clicked(self):
 
         self.control_point_3_click_count_parity = self.control_point_3_click_count_parity + 1
 
@@ -481,7 +719,7 @@ class Ui_MainWindow(object):
             self.pushButton_6.setEnabled(False)
             self.control_point_3_click_cursor_enable = True
     
-    def control_point_4_clicked(self):
+    def controlPoint4Clicked(self):
 
         self.control_point_4_click_count_parity = self.control_point_4_click_count_parity + 1
 
@@ -497,7 +735,42 @@ class Ui_MainWindow(object):
             self.pushButton_5.setEnabled(False)
             self.control_point_4_click_cursor_enable = True
 
-    def left_mouse_clicked(self, event):
+    def contrastCurveClicked(self):
+
+        self.contrast_curve_click_count_parity = self.contrast_curve_click_count_parity + 1
+
+        if self.contrast_curve_click_count_parity % 2 == 0:
+            self.contrast_curve = False
+            self.contrast_curve_click_count_parity =0
+        else:
+            self.contrast_curve = True
+
+        self.redrawCanvas()
+
+    def showAreas(self):
+
+        self.show_areas_click_count_parity = self.show_areas_click_count_parity + 1
+
+        if self.show_areas_click_count_parity % 2 == 0:
+            self.show_areas = False
+            self.show_areas_click_count_parity = 0
+        else:
+            self.show_areas = True
+        self.redrawCanvas()
+
+    def showControlPoints(self):
+
+        self.show_control_points_click_count_parity = self.show_control_points_click_count_parity + 1
+
+        if self.show_control_points_click_count_parity % 2 == 0:
+            self.show_control_points = False
+            self.show_control_points_click_count_parity = 0
+        else:
+            self.show_control_points = True
+        self.redrawCanvas()
+
+
+    def leftMouseClicked(self, event):
         if event.button == MouseButton.LEFT:
             if self.control_point_1_click_cursor_enable:
                 self.lineEdit_1.setText(str(round(event.xdata, 2)))
