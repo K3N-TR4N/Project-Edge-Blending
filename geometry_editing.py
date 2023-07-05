@@ -5,12 +5,13 @@ from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 from matplotlib.backend_bases import MouseButton
 
+import re
+
 import matplotlib
 import matplotlib.pyplot as plt        
 matplotlib.use('Qt5Agg')
 
-class Ui_MainWindow(object):    
-
+class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
 
         #######################################################
@@ -40,12 +41,13 @@ class Ui_MainWindow(object):
         self.show_control_points_click_count_parity = 0
         self.show_control_points = False
 
-        #######################################################
+      #######################################################
 
         MainWindow.setObjectName("Geometry Editing - Planaterarium Edge")
         MainWindow.resize(self.window_width, self.window_height)
         
         #######################################################
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.frame_1 = QtWidgets.QFrame(self.centralwidget)
@@ -99,92 +101,74 @@ class Ui_MainWindow(object):
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
         self.verticalLayoutWidget = QtWidgets.QWidget(self.frame_2)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 331, 191))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 331, 221))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout_1 = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout_1.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_1.setObjectName("verticalLayout_1")
         self.comboBox_1 = QtWidgets.QComboBox(self.verticalLayoutWidget)
         self.comboBox_1.setObjectName("comboBox_1")
-
-        #####################################################################
-        
-        client_servers_info_file = open('projectors.txt', 'r')
-
-        self.client_servers_IP_addresses = []
-
-        for line in client_servers_info_file:
-            self.client_servers_IP_addresses.append(line.removesuffix('\n'))
-
-        #print(projectors)
-        client_servers_info_file.close()
-
-        self.projector_numbers = []
-        self.projector_count = 0
-
-        for projector in self.client_servers_IP_addresses:
-            self.projector_count = self.projector_count + 1 
-            self.projector_numbers.append('Projector ' + str(self.projector_count) + ' (' + projector + ')')
-
-        self.comboBox_1.addItems(self.projector_numbers)
-
-        #####################################################################
-
         self.verticalLayout_1.addWidget(self.comboBox_1)
-        self.gridLayout_1 = QtWidgets.QGridLayout()
-        self.gridLayout_1.setObjectName("gridLayout_1")
-        self.gridLayout_3 = QtWidgets.QGridLayout()
-        self.gridLayout_3.setObjectName("gridLayout_3")
-        self.lineEdit_1 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
-        self.lineEdit_1.setObjectName("lineEdit_1")
-        self.gridLayout_3.addWidget(self.lineEdit_1, 0, 1, 1, 1)
-        self.pushButton_2 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.gridLayout_3.addWidget(self.pushButton_2, 4, 3, 1, 1)
-        self.pushButton_1 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton_1.setObjectName("pushButton_1")
-
-        #####################################################################
-    
-        self.pushButton_1.clicked.connect(self.addNewCurveClicked)
-        self.pushButton_2.clicked.connect(self.removeCurveClicked)
-
-        #####################################################################
-
-        self.gridLayout_3.addWidget(self.pushButton_1, 4, 1, 1, 1)
-        self.lineEdit_3 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
-        self.lineEdit_3.setObjectName("lineEdit_3")
-        self.gridLayout_3.addWidget(self.lineEdit_3, 2, 1, 1, 1)
-        self.lineEdit_2 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
-        self.lineEdit_2.setObjectName("lineEdit_2")
-        self.gridLayout_3.addWidget(self.lineEdit_2, 1, 1, 1, 1)
-        self.lineEdit_4 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
-        self.lineEdit_4.setObjectName("lineEdit_4")
-        self.gridLayout_3.addWidget(self.lineEdit_4, 3, 1, 1, 1)
-        self.lineEdit_5 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
-        self.lineEdit_5.setObjectName("lineEdit_5")
-        self.gridLayout_3.addWidget(self.lineEdit_5, 0, 3, 1, 1)
+        self.gridLayout_4 = QtWidgets.QGridLayout()
+        self.gridLayout_4.setObjectName("gridLayout_4")
         self.lineEdit_6 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
         self.lineEdit_6.setObjectName("lineEdit_6")
-        self.gridLayout_3.addWidget(self.lineEdit_6, 1, 3, 1, 1)
-        self.lineEdit_7 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
-        self.lineEdit_7.setObjectName("lineEdit_7")
-        self.gridLayout_3.addWidget(self.lineEdit_7, 2, 3, 1, 1)
-        self.lineEdit_8 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
-        self.lineEdit_8.setObjectName("lineEdit_8")
-        self.gridLayout_3.addWidget(self.lineEdit_8, 3, 3, 1, 1)
-        self.gridLayout_1.addLayout(self.gridLayout_3, 1, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.lineEdit_6, 2, 2, 1, 1)
         self.comboBox_2 = QtWidgets.QComboBox(self.verticalLayoutWidget)
         self.comboBox_2.setObjectName("comboBox_2")
+        self.gridLayout_4.addWidget(self.comboBox_2, 0, 0, 1, 1)
+        self.pushButton_3 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_3.setObjectName("pushButton_3")
+        self.gridLayout_4.addWidget(self.pushButton_3, 1, 0, 1, 1)
+        self.pushButton_6 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_6.setObjectName("pushButton_6")
+        self.gridLayout_4.addWidget(self.pushButton_6, 4, 0, 1, 1)
+        self.lineEdit_5 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.lineEdit_5.setObjectName("lineEdit_5")
+        self.gridLayout_4.addWidget(self.lineEdit_5, 1, 2, 1, 1)
+        self.label_2 = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label_2.setObjectName("label_2")
+        self.gridLayout_4.addWidget(self.label_2, 0, 2, 1, 1)
+        self.pushButton_4 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_4.setObjectName("pushButton_4")
+        self.gridLayout_4.addWidget(self.pushButton_4, 2, 0, 1, 1)
+        self.lineEdit_7 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.lineEdit_7.setObjectName("lineEdit_7")
+        self.gridLayout_4.addWidget(self.lineEdit_7, 3, 2, 1, 1)
+        self.label_1 = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label_1.setObjectName("label_1")
+        self.gridLayout_4.addWidget(self.label_1, 0, 1, 1, 1)
+        self.lineEdit_3 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.lineEdit_3.setObjectName("lineEdit_3")
+        self.gridLayout_4.addWidget(self.lineEdit_3, 3, 1, 1, 1)
+        self.lineEdit_1 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.lineEdit_1.setObjectName("lineEdit_1")
+        self.gridLayout_4.addWidget(self.lineEdit_1, 1, 1, 1, 1)
+        self.lineEdit_2 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.lineEdit_2.setObjectName("lineEdit_2")
+        self.gridLayout_4.addWidget(self.lineEdit_2, 2, 1, 1, 1)
+        self.pushButton_5 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_5.setObjectName("pushButton_5")
+        self.gridLayout_4.addWidget(self.pushButton_5, 3, 0, 1, 1)
+        self.pushButton_7 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_7.setObjectName("pushButton_7")
+        self.gridLayout_4.addWidget(self.pushButton_7, 5, 0, 1, 1)
+        self.pushButton_2 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.gridLayout_4.addWidget(self.pushButton_2, 5, 2, 1, 1)
+        self.pushButton_1 = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton_1.setObjectName("pushButton_1")
+        self.gridLayout_4.addWidget(self.pushButton_1, 5, 1, 1, 1)
+        self.lineEdit_8 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.lineEdit_8.setObjectName("lineEdit_8")
+        self.gridLayout_4.addWidget(self.lineEdit_8, 4, 2, 1, 1)
+        self.lineEdit_4 = QtWidgets.QLineEdit(self.verticalLayoutWidget)
+        self.lineEdit_4.setObjectName("lineEdit_4")
+        self.gridLayout_4.addWidget(self.lineEdit_4, 4, 1, 1, 1)
+        self.verticalLayout_1.addLayout(self.gridLayout_4)
 
-        #####################################################################
+        #########################################################################
 
-        '''
-        print(self.bezier_curves.keys())
-        self.bezier_curves.clear()
-        print(self.bezier_curves.keys())
-        '''
-        
         if not self.bezier_curves.keys():
             self.comboBox_2.addItem('No Curves')
         else:
@@ -205,72 +189,16 @@ class Ui_MainWindow(object):
         
         self.comboBox_2.currentTextChanged.connect(self.selectedCurveChanged)
 
-        #####################################################################
-
-        self.gridLayout_1.addWidget(self.comboBox_2, 0, 1, 1, 1)
-        self.gridLayout_8 = QtWidgets.QGridLayout()
-        self.gridLayout_8.setObjectName("gridLayout_8")
-        self.label_1 = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label_1.setObjectName("label_1")
-        self.gridLayout_8.addWidget(self.label_1, 0, 0, 1, 1)
-        self.label_2 = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.label_2.setObjectName("label_2")
-        self.gridLayout_8.addWidget(self.label_2, 0, 1, 1, 1)
-        self.gridLayout_1.addLayout(self.gridLayout_8, 0, 2, 1, 1)
-        self.gridLayout_2 = QtWidgets.QGridLayout()
-        self.gridLayout_2.setObjectName("gridLayout_2")
-        self.pushButton_7 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton_7.setObjectName("pushButton_7")
-
-        ####################################################################
-
+        self.pushButton_1.clicked.connect(self.addNewCurveClicked)
+        self.pushButton_2.clicked.connect(self.removeCurveClicked)
+        self.pushButton_3.clicked.connect(self.controlPoint1Clicked)
+        self.pushButton_4.clicked.connect(self.controlPoint2Clicked)
+        self.pushButton_5.clicked.connect(self.controlPoint3Clicked)
+        self.pushButton_6.clicked.connect(self.controlPoint4Clicked)
         self.pushButton_7.clicked.connect(self.setControlPoints)
 
-        ####################################################################
+        #########################################################################
 
-        self.gridLayout_2.addWidget(self.pushButton_7, 4, 0, 1, 1)
-        self.pushButton_3 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton_3.setObjectName("pushButton_3")
-
-        ####################################################################
-
-        self.pushButton_3.clicked.connect(self.controlPoint1Clicked)
-
-        ####################################################################
-
-        self.gridLayout_2.addWidget(self.pushButton_3, 0, 0, 1, 1)
-        self.pushButton_4 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton_4.setObjectName("pushButton_4")
-
-        ####################################################################
-
-        self.pushButton_4.clicked.connect(self.controlPoint2Clicked)
-
-        ####################################################################
-
-        self.gridLayout_2.addWidget(self.pushButton_4, 1, 0, 1, 1)
-        self.pushButton_5 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton_5.setObjectName("pushButton_5")
-
-        ####################################################################
-
-        self.pushButton_5.clicked.connect(self.controlPoint3Clicked)
-
-        ####################################################################
-
-        self.gridLayout_2.addWidget(self.pushButton_5, 2, 0, 1, 1)
-        self.pushButton_6 = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton_6.setObjectName("pushButton_6")
-
-        ####################################################################
-
-        self.pushButton_6.clicked.connect(self.controlPoint4Clicked)
-
-        ####################################################################
-
-        self.gridLayout_2.addWidget(self.pushButton_6, 3, 0, 1, 1)
-        self.gridLayout_1.addLayout(self.gridLayout_2, 1, 1, 1, 1)
-        self.verticalLayout_1.addLayout(self.gridLayout_1)
         self.horizontalLayoutWidget_2 = QtWidgets.QWidget(self.frame_2)
         self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(0, 260, 331, 92))
         self.horizontalLayoutWidget_2.setObjectName("horizontalLayoutWidget_2")
@@ -360,27 +288,47 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Geometry Editing - Planaterium Edge Blend"))
-        self.pushButton_2.setText(_translate("MainWindow", "Remove curve"))
-        self.pushButton_1.setText(_translate("MainWindow", "Add new curve"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Geometry Editing - Planetarium Edge Blend"))
+        self.pushButton_3.setText(_translate("MainWindow", "Control Point 1"))
+        self.pushButton_6.setText(_translate("MainWindow", "Control Point 4"))
         self.label_2.setText(_translate("MainWindow", "Y"))
+        self.pushButton_4.setText(_translate("MainWindow", "Control Point 2"))
         self.label_1.setText(_translate("MainWindow", "X"))
         self.pushButton_5.setText(_translate("MainWindow", "Control Point 3"))
         self.pushButton_7.setText(_translate("MainWindow", "Set Control Points"))
-        self.pushButton_3.setText(_translate("MainWindow", "Control Point 1"))
-        self.pushButton_4.setText(_translate("MainWindow", "Control Point 2"))
-        self.pushButton_6.setText(_translate("MainWindow", "Control Point 4"))
+        self.pushButton_2.setText(_translate("MainWindow", "Remove curve"))
+        self.pushButton_1.setText(_translate("MainWindow", "Add new curve"))
         self.label_3.setText(_translate("MainWindow", "Settings for Filling Area for Lines"))
         self.pushButton_8.setText(_translate("MainWindow", "Left of Line"))
         self.pushButton_9.setText(_translate("MainWindow", "Right of Line"))
         self.pushButton_10.setText(_translate("MainWindow", "Above Line"))
         self.pushButton_11.setText(_translate("MainWindow", "Below Line"))
         self.label_4.setText(_translate("MainWindow", "Mask Display Settings"))
-        self.pushButton_12.setText(_translate("MainWindow", "Show Selected Curve in Contrast"))
-        self.pushButton_13.setText(_translate("MainWindow", "Show Curve Areas"))
+        self.pushButton_12.setText(_translate("MainWindow", "Show Selected Curve In Contrasting Color"))
+        self.pushButton_13.setText(_translate("MainWindow", "Show Areas"))
         self.pushButton_14.setText(_translate("MainWindow", "Show Control Points"))
+        self.retrieveProjectors()
 
     ###########################################################
+
+    def retrieveProjectors(self):
+        client_servers_info_file = open('projectors.txt', 'r')
+
+        self.client_servers_IP_addresses = []
+
+        for line in client_servers_info_file:
+            self.client_servers_IP_addresses.append(line.removesuffix('\n'))
+
+        client_servers_info_file.close()
+
+        self.projector_numbers = []
+        self.projector_count = 0
+
+        for projector in self.client_servers_IP_addresses:
+            self.projector_count = self.projector_count + 1 
+            self.projector_numbers.append('Projector ' + str(self.projector_count) + ' (' + projector + ')')
+
+        self.comboBox_1.addItems(self.projector_numbers)
     
     def redrawCanvas(self):
         self.axes.clear()
@@ -419,27 +367,35 @@ class Ui_MainWindow(object):
                     self.line_areas[area].set(edgecolor = 'k', facecolor = 'None')
             self.axes.add_patch(self.line_areas[area])
 
-        self.axes.set_xlim((0 - self.boundary_size, self.window_width + self.boundary_size))
-        self.axes.set_ylim((0 - self.boundary_size, self.window_height + self.boundary_size))
+        self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
+        self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
         self.axes.grid(color = 'k')
         self.canvas.draw() 
 
     def setControlPoints(self):      
-        #   Control Point 1 and Control 4 cannot be at the same point if Control Point 2 and Control Point 3 are same
-        #   All four control points cannot have the same coordinate
-        #   Control Point 1 and Control 4 have to be on the boundary lines
-
         if self.comboBox_2.currentText() == 'No Curves':
             return
         else:
-            user_control_point_1_x = float(self.lineEdit_1.text())
-            user_control_point_2_x = float(self.lineEdit_2.text())
-            user_control_point_3_x = float(self.lineEdit_3.text())
-            user_control_point_4_x = float(self.lineEdit_4.text())
-            user_control_point_1_y = float(self.lineEdit_5.text())
-            user_control_point_2_y = float(self.lineEdit_6.text())
-            user_control_point_3_y = float(self.lineEdit_7.text())
-            user_control_point_4_y = float(self.lineEdit_8.text())
+            
+            if self.evaluateLineEditFields() == 'Valid':
+                user_control_point_1_x = float(self.lineEdit_1.text())
+                user_control_point_2_x = float(self.lineEdit_2.text())
+                user_control_point_3_x = float(self.lineEdit_3.text())
+                user_control_point_4_x = float(self.lineEdit_4.text())
+                user_control_point_1_y = float(self.lineEdit_5.text())
+                user_control_point_2_y = float(self.lineEdit_6.text())
+                user_control_point_3_y = float(self.lineEdit_7.text())
+                user_control_point_4_y = float(self.lineEdit_8.text())
+            else: 
+                return
+            
+            user_control_point_values = [user_control_point_1_x, user_control_point_1_y, 
+                                            user_control_point_2_x, user_control_point_2_y, 
+                                            user_control_point_3_x, user_control_point_3_y, 
+                                            user_control_point_4_x, user_control_point_4_y]
+
+            if self.evaluateControlPoints(user_control_point_values = user_control_point_values) == 'Invalid':
+                return
 
             new_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
             self.control_points_list[self.comboBox_2.currentText()] = new_control_points
@@ -452,24 +408,32 @@ class Ui_MainWindow(object):
 
             self.evaluateLineCurve(line_name = self.comboBox_2.currentText(), new_control_points = new_control_points)
         
-            '''
-            '''
-        
     def addNewCurveClicked(self):
 
         '''
         print('\nBefore new curve')
         print(self.control_points_list)
         '''
+
+        if self.evaluateLineEditFields() == 'Valid':
+            user_control_point_1_x = float(self.lineEdit_1.text())
+            user_control_point_2_x = float(self.lineEdit_2.text())
+            user_control_point_3_x = float(self.lineEdit_3.text())
+            user_control_point_4_x = float(self.lineEdit_4.text())
+            user_control_point_1_y = float(self.lineEdit_5.text())
+            user_control_point_2_y = float(self.lineEdit_6.text())
+            user_control_point_3_y = float(self.lineEdit_7.text())
+            user_control_point_4_y = float(self.lineEdit_8.text())
+        else: 
+            return
         
-        user_control_point_1_x = float(self.lineEdit_1.text())
-        user_control_point_2_x = float(self.lineEdit_2.text())
-        user_control_point_3_x = float(self.lineEdit_3.text())
-        user_control_point_4_x = float(self.lineEdit_4.text())
-        user_control_point_1_y = float(self.lineEdit_5.text())
-        user_control_point_2_y = float(self.lineEdit_6.text())
-        user_control_point_3_y = float(self.lineEdit_7.text())
-        user_control_point_4_y = float(self.lineEdit_8.text())
+        user_control_point_values = [user_control_point_1_x, user_control_point_1_y, 
+                                        user_control_point_2_x, user_control_point_2_y, 
+                                        user_control_point_3_x, user_control_point_3_y, 
+                                        user_control_point_4_x, user_control_point_4_y]
+
+        if self.evaluateControlPoints(user_control_point_values = user_control_point_values) == 'Invalid':
+            return
 
         new_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
 
@@ -495,6 +459,53 @@ class Ui_MainWindow(object):
 
         self.evaluateLineCurve(line_name = new_bezier_curve_name, new_control_points = new_control_points)
 
+    def evaluateLineEditFields(self):
+        input_status = 'Valid'
+
+        user_control_point_values = [self.lineEdit_1.text(), self.lineEdit_2.text(), 
+                                     self.lineEdit_3.text(), self.lineEdit_4.text(), 
+                                     self.lineEdit_5.text(), self.lineEdit_6.text(), 
+                                     self.lineEdit_7.text(), self.lineEdit_8.text()]
+
+        for control_point_value in user_control_point_values:
+            if re.fullmatch("[-]?[0-9]+[.]?[0-9]*", str(control_point_value)) == None:
+                print('Invalid control point values! Values for control points cannot include letters, symbols, or spaces.')
+                return 'Invalid'
+
+        return input_status
+
+    #   All four control points cannot have the same coordinate
+    #   Control Point 1 and Control 4 cannot be at the same point
+    #   Control Point 1 and Control 4 have to be on the boundary lines
+    def evaluateControlPoints(self, user_control_point_values):
+        
+        input_status = 'Valid'
+        
+        if len(set(user_control_point_values)) == 1:
+            print('Invalid control points! All four control points cannot be on the same coordinate.')
+            return 'Invalid'
+        if user_control_point_values[0] == user_control_point_values[6] and user_control_point_values[1] == user_control_point_values[7]:
+            print('Invalid control points! Control point 1 and control point 4 cannot be the same if control point 2 and control point 3 are the same.')
+            return 'Invalid'
+        if user_control_point_values[0] < 0 or user_control_point_values[0] > self.window_width or user_control_point_values[1] < 0 or user_control_point_values[1] > self.window_height:
+            print('Invalid control points! Control point 1 must be on the blue dashed lines.')
+            return 'Invalid'
+        else:
+            if user_control_point_values[1] != 0 and user_control_point_values[1] != self.window_height and user_control_point_values[0] != 0 and user_control_point_values[0] != self.window_width:
+                print('Invalid control points! Control point 1 must be on the blue dashed lines.')
+                return 'Invalid'
+
+
+        if user_control_point_values[6] < 0 or user_control_point_values[6] > self.window_width or user_control_point_values[7] < 0 or user_control_point_values[7] > self.window_height:
+            print('Invalid control points! Control point 4 must be on the blue dashed lines.')
+            return 'Invalid'
+        else:
+            if user_control_point_values[7] != 0 and user_control_point_values[7] != self.window_height and user_control_point_values[6] != 0 and user_control_point_values[6] != self.window_width:
+                print('Invalid control points! Control point 4 must be on the blue dashed lines.')
+                return 'Invalid'
+        
+        return 'Valid'
+    
     def evaluateLineCurve(self, line_name, new_control_points):
 
         if len(set(new_control_points)) == 2:
@@ -515,10 +526,29 @@ class Ui_MainWindow(object):
             self.line_control_point_4 = new_control_points[3]
 
             if self.line_control_point_1[1] == self.line_control_point_4[1]:
-                self.pushButton_8.setEnabled(False)
-                self.pushButton_9.setEnabled(False)
-                self.pushButton_10.setEnabled(True)
-                self.pushButton_11.setEnabled(True)
+
+                if (self.line_control_point_1[0] == 0.0 and self.line_control_point_4[0] == self.window_width) or (self.line_control_point_1[0] == self.window_width and self.line_control_point_4[0] == 0):
+                    self.pushButton_8.setEnabled(False)
+                    self.pushButton_9.setEnabled(False)
+                    self.pushButton_10.setEnabled(True)
+                    self.pushButton_11.setEnabled(True)
+                else:
+                    print('Invalid control points! For horizontal lines, control points 1 and 4 must be on the ends of the projection screen.')
+                    
+                    self.pushButton_1.setEnabled(True)
+                    self.pushButton_2.setEnabled(True)
+
+                    self.pushButton_3.setEnabled(True)
+                    self.pushButton_4.setEnabled(True)
+                    self.pushButton_5.setEnabled(True)
+                    self.pushButton_6.setEnabled(True)
+
+                    self.pushButton_7.setEnabled(True)
+
+                    self.comboBox_2.setEnabled(True)
+                    
+                    return
+            
             else:
                 self.pushButton_8.setEnabled(True)
                 self.pushButton_9.setEnabled(True)
@@ -768,7 +798,6 @@ class Ui_MainWindow(object):
         else:
             self.show_control_points = True
         self.redrawCanvas()
-
 
     def leftMouseClicked(self, event):
         if event.button == MouseButton.LEFT:
