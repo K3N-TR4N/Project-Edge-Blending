@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 from PyQt5.QtGui import QPixmap
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt, QEvent, QObject
 
 class ImageWindow(QMainWindow):
@@ -11,7 +12,7 @@ class ImageWindow(QMainWindow):
         self.setWindowTitle("Image Window")
 
         # Load the image
-        self.image_path = "Mask.png"
+        self.image_path = "figure.png"
         self.image_label = QLabel(self)
         self.image_label.setPixmap(QPixmap(self.image_path))
 
@@ -22,7 +23,7 @@ class ImageWindow(QMainWindow):
 if __name__ == "__main__":
     # Create the application
     app = QApplication(sys.argv)
-
+    
     # Create and show the main window
     window = ImageWindow()
 
