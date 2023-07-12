@@ -53,7 +53,6 @@ class GeometryEditingWindow(QMainWindow):
     def __init__(self):
         super(GeometryEditingWindow, self).__init__()
         loadUi("GeometryEditingWindow.ui", self)
-        MainWindow.setObjectName("Mask Feed and Editing - Planaterarium Edge Blend")
 
         self.window_width = 1280
         self.window_height = 720
