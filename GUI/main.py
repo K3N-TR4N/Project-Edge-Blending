@@ -3,6 +3,8 @@ import re
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QApplication, QMainWindow, QMessageBox
+from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
+from PyQt5.QtCore import QDataStream, QIODevice
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.path import Path
@@ -12,6 +14,9 @@ from matplotlib.backend_bases import MouseButton
 import matplotlib
 import matplotlib.pyplot as plt        
 matplotlib.use('Qt5Agg')
+
+import socket
+import pickle
 
 # This file contains all the functionalities of the widgets between the windows
 
@@ -54,8 +59,8 @@ class GeometryEditingWindow(QMainWindow):
         super(GeometryEditingWindow, self).__init__()
         loadUi("GeometryEditingWindow.ui", self)
 
-        self.window_width = 1280
-        self.window_height = 720
+        self.window_width = 1920
+        self.window_height = 1080
         self.boundary_size = 100
         self.boundaries_x = [0, 0, self.window_width, self.window_width, 0]
         self.boundaries_y = [self.window_height, 0, 0, self.window_height, self.window_height]
@@ -91,6 +96,8 @@ class GeometryEditingWindow(QMainWindow):
         self.line_area_shapes = {}
 
         self.client_servers_IP_addresses = {}
+
+        self.PORT = 64012
 
         plt.connect('button_press_event', self.leftMouseClicked)
         self.horizontalLayout_1.addWidget(self.canvas)
@@ -134,6 +141,7 @@ class GeometryEditingWindow(QMainWindow):
             self.redrawCanvas()
         
         self.Curve_box.currentTextChanged.connect(self.selectedCurveChanged)
+        self.Client_projectors_box.currentTextChanged.connect(self.clientComboBoxChanged)
 
         self.Add_curve_btn.clicked.connect(self.addNewCurveClicked)
         self.Remove_curve_btn.clicked.connect(self.removeCurveClicked)
@@ -252,7 +260,8 @@ class GeometryEditingWindow(QMainWindow):
                 del self.line_area_shapes[self.Curve_box.currentText()]
 
             self.redrawCanvas()
-
+            self.SendInfo()
+            
             self.evaluateLineCurve(line_name = self.Curve_box.currentText(), new_control_points = new_control_points)
         
     def addNewCurveClicked(self):
@@ -664,12 +673,44 @@ class GeometryEditingWindow(QMainWindow):
                     self.setControlPoints()
 
     ###########################################################
+    # NETWORKING
+    ###########################################################
+
+    def clientComboBoxChanged(self):
+        #self.GetInfo()
+        test = 1
+
+    def GetInfo(self):
+        clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
+        self.tcpSocket = QTcpSocket(self)
+        self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
+        self.tcpSocket.waitForConnected(1000)
+        toSend = "send"
+        toSend = pickle.dumps(toSend, -1)
+        self.tcpSocket.write(toSend)
+        self.tcpSocket.waitForReadyRead()
+
+
+    def SendInfo(self):
+        clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
+        self.tcpSocket = QTcpSocket(self)
+        self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
+        self.tcpSocket.waitForConnected(10000)
+        toSend = [self.control_points_list, self.line_area_points]
+        toSend = pickle.dumps(toSend, -1)
+        self.tcpSocket.write(toSend)
+        self.tcpSocket.waitForReadyRead()
+        print(pickle.loads(self.tcpSocket.readAll()))
 
     def gotoMainWindow(self):
         mainWindow = MainWindow()
         widget.addWidget(mainWindow)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
+
+###################################################
+# PROJECTOR CONFIGURATION
+###################################################
 class ProjectorConfigurationWindow(QMainWindow):
     def __init__(self):
         super(ProjectorConfigurationWindow, self).__init__()
