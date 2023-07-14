@@ -40,7 +40,7 @@ class ImageWindow(QMainWindow):
         self.window_height = GetSystemMetrics(1)
         self.axes.set_xlim([0, self.window_width])
         self.axes.set_ylim([0, self.window_height])
-
+#test
         self.PORT = 64012
         self.fileName = "bezierInfo"
         try:

@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
         geometryEdit = GeometryEditingWindow()
         widget.addWidget(geometryEdit)
         widget.setCurrentIndex(widget.currentIndex() + 1)
-
+#test
     def gotoProjectorConfigurationWindow(self):
         projectorConfig = ProjectorConfigurationWindow()
         widget.addWidget(projectorConfig)
