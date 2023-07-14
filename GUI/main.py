@@ -3,6 +3,8 @@ import re
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QApplication, QMainWindow, QMessageBox
+from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
+from PyQt5.QtCore import QDataStream, QIODevice
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.path import Path
@@ -12,6 +14,9 @@ from matplotlib.backend_bases import MouseButton
 import matplotlib
 import matplotlib.pyplot as plt        
 matplotlib.use('Qt5Agg')
+
+import socket
+import pickle
 
 # This file contains all the functionalities of the widgets between the windows
 
@@ -92,6 +97,8 @@ class GeometryEditingWindow(QMainWindow):
 
         self.client_servers_IP_addresses = {}
 
+        self.PORT = 64012
+
         plt.connect('button_press_event', self.leftMouseClicked)
         self.horizontalLayout_1.addWidget(self.canvas)
 
@@ -134,6 +141,7 @@ class GeometryEditingWindow(QMainWindow):
             self.redrawCanvas()
         
         self.Curve_box.currentTextChanged.connect(self.selectedCurveChanged)
+        self.Client_projectors_box.currentTextChanged.connect(self.clientComboBoxChanged)
 
         self.Add_curve_btn.clicked.connect(self.addNewCurveClicked)
         self.Remove_curve_btn.clicked.connect(self.removeCurveClicked)
@@ -252,7 +260,8 @@ class GeometryEditingWindow(QMainWindow):
                 del self.line_area_shapes[self.Curve_box.currentText()]
 
             self.redrawCanvas()
-
+            self.SendInfo()
+            
             self.evaluateLineCurve(line_name = self.Curve_box.currentText(), new_control_points = new_control_points)
         
     def addNewCurveClicked(self):
@@ -609,7 +618,7 @@ class GeometryEditingWindow(QMainWindow):
 
         if self.contrast_curve_click_count_parity % 2 == 0:
             self.contrast_curve = False
-            self.contrast_curve_click_count_parity = 0
+            self.contrast_curve_click_count_parity =0
         else:
             self.contrast_curve = True
 
@@ -624,17 +633,6 @@ class GeometryEditingWindow(QMainWindow):
             self.show_areas_click_count_parity = 0
         else:
             self.show_areas = True
-        self.redrawCanvas()
-
-    def showControlPoints(self):
-
-        self.show_control_points_click_count_parity = self.show_control_points_click_count_parity + 1
-
-        if self.show_control_points_click_count_parity % 2 == 0:
-            self.show_control_points = False
-            self.show_control_points_click_count_parity = 0
-        else:
-            self.show_control_points = True
         self.redrawCanvas()
 
     def setMouseCursorCoordinates(self, cursor_x, cursor_y, x_line_edit, y_line_edit):
@@ -686,12 +684,44 @@ class GeometryEditingWindow(QMainWindow):
                 self.setControlPoints()
 
     ###########################################################
+    # NETWORKING
+    ###########################################################
+
+    def clientComboBoxChanged(self):
+        #self.GetInfo()
+        test = 1
+
+    def GetInfo(self):
+        clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
+        self.tcpSocket = QTcpSocket(self)
+        self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
+        self.tcpSocket.waitForConnected(1000)
+        toSend = "send"
+        toSend = pickle.dumps(toSend, -1)
+        self.tcpSocket.write(toSend)
+        self.tcpSocket.waitForReadyRead()
+
+
+    def SendInfo(self):
+        clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
+        self.tcpSocket = QTcpSocket(self)
+        self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
+        self.tcpSocket.waitForConnected(10000)
+        toSend = [self.control_points_list, self.line_area_points]
+        toSend = pickle.dumps(toSend, -1)
+        self.tcpSocket.write(toSend)
+        self.tcpSocket.waitForReadyRead()
+        print(pickle.loads(self.tcpSocket.readAll()))
 
     def gotoMainWindow(self):
         mainWindow = MainWindow()
         widget.addWidget(mainWindow)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
+
+###################################################
+# PROJECTOR CONFIGURATION
+###################################################
 class ProjectorConfigurationWindow(QMainWindow):
     def __init__(self):
         super(ProjectorConfigurationWindow, self).__init__()
@@ -767,7 +797,7 @@ class ProjectorConfigurationWindow(QMainWindow):
         # If either the name or IP are blank you are disallowed from committing that edit.
         if self.Edit_name.toPlainText() != "" and self.Edit_IP.toPlainText() != "":
             # This regular expression matches with an IPv4 address, any IP added SHOULD be let through.
-            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Add_IP.toPlainText()):
+            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Edit_IP.toPlainText()):
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setText("Enter a valid IP address.")
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
