@@ -654,42 +654,53 @@ class GeometryEditingWindow(QMainWindow):
             self.show_areas = True
         self.redrawCanvas()
 
-    def showControlPoints(self):
-
-        self.show_control_points_click_count_parity = self.show_control_points_click_count_parity + 1
-
-        if self.show_control_points_click_count_parity % 2 == 0:
-            self.show_control_points = False
-            self.show_control_points_click_count_parity = 0
-        else:
-            self.show_control_points = True
-        self.redrawCanvas()
+    def setMouseCursorCoordinates(self, cursor_x, cursor_y, x_line_edit, y_line_edit):
+        if cursor_x != None and cursor_y != None:
+            if abs(cursor_x - 0) <= 10.0 and cursor_y >= 0 and cursor_y <= self.window_height:
+                x_line_edit.setText('0.0')
+                y_line_edit.setText(str(round(cursor_y, 2)))
+            elif abs(cursor_x - self.window_width) <= 10.0 and cursor_y >= 0 and cursor_y <= self.window_height:
+                x_line_edit.setText(str(self.window_width))
+                y_line_edit.setText(str(round(cursor_y, 2)))
+            elif abs(cursor_y - 0) <= 10.0 and cursor_x >= 0 and cursor_x <= self.window_width:
+                x_line_edit.setText(str(round(cursor_x, 2)))
+                y_line_edit.setText('0.0')
+            elif abs(cursor_y - self.window_height) <= 10.0 and cursor_x >= 0 and cursor_x <= self.window_width:
+                x_line_edit.setText(str(round(cursor_x, 2)))
+                y_line_edit.setText(str(self.window_height))
+            elif abs(cursor_x - 0.0) <= 10.0 and abs(cursor_y - self.window_height) <= 10.0:
+                x_line_edit.setText('0.0')
+                y_line_edit.setText(str(self.window_height))
+            elif abs(cursor_x - 0.0) <= 10.0 and abs(cursor_y - 0.0) <= 10.0:
+                x_line_edit.setText('0.0')
+                y_line_edit.setText('0.0')
+            elif abs(cursor_x - self.window_width) <= 10.0 and abs(cursor_y - 0.0) <= 10.0:
+                x_line_edit.setText(str(self.window_width))
+                y_line_edit.setText('0.0')
+            elif abs(cursor_x - self.window_width) <= 10.0 and abs(cursor_y - self.window_height) <= 10.0:
+                x_line_edit.setText(str(self.window_width))
+                y_line_edit.setText(str(self.window_height))
+            elif x_line_edit == self.control_point_2_x_line or x_line_edit == self.control_point_3_x_line:
+                x_line_edit.setText(str(round(cursor_x, 2)))
+                y_line_edit.setText(str(round(cursor_y, 2)))
 
     def leftMouseClicked(self, event):
         if event.button == MouseButton.LEFT:
             if self.control_point_1_click_cursor_enable:
-                if event.xdata != None and event.ydata != None:
-                    self.control_point_1_x_line.setText(str(round(event.xdata, 2)))
-                    self.control_point_1_y_line.setText(str(round(event.ydata, 2)))
-                    self.setControlPoints()
+                self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_1_x_line, self.control_point_1_y_line)
+                self.setControlPoints()
 
             elif self.control_point_2_click_cursor_enable:
-                if event.xdata != None and event.ydata != None:
-                    self.control_point_2_x_line.setText(str(round(event.xdata, 2)))
-                    self.control_point_2_y_line.setText(str(round(event.ydata, 2)))
-                    self.setControlPoints()
+                self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_2_x_line, self.control_point_2_y_line)
+                self.setControlPoints()
 
             elif self.control_point_3_click_cursor_enable:
-                if event.xdata != None and event.ydata != None:
-                    self.control_point_3_x_line.setText(str(round(event.xdata, 2)))
-                    self.control_point_3_y_line.setText(str(round(event.ydata, 2)))
-                    self.setControlPoints()
+                self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_3_x_line, self.control_point_3_y_line)
+                self.setControlPoints()
             
             elif self.control_point_4_click_cursor_enable:
-                if event.xdata != None and event.ydata != None:
-                    self.control_point_4_x_line.setText(str(round(event.xdata, 2)))
-                    self.control_point_4_y_line.setText(str(round(event.ydata, 2)))
-                    self.setControlPoints()
+                self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_4_x_line, self.control_point_4_y_line)
+                self.setControlPoints()
 
 
     ## Client combo box text changed signal
@@ -848,7 +859,7 @@ class ProjectorConfigurationWindow(QMainWindow):
         # If either the name or IP are blank you are disallowed from adding it.
         if self.Add_name.toPlainText() != "" and self.Add_IP.toPlainText() != "":
             # This regular expression matches with an IPv4 address, any IP added SHOULD be let through.
-            if not re.search(r"\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b", self.Add_IP.toPlainText()):
+            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Add_IP.toPlainText()):
                 # If the IP address is invalid, open an error message informing the user.
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setText("Enter a valid IP address.")
@@ -870,7 +881,7 @@ class ProjectorConfigurationWindow(QMainWindow):
         # If either the name or IP are blank you are disallowed from committing that edit.
         if self.Edit_name.toPlainText() != "" and self.Edit_IP.toPlainText() != "":
             # This regular expression matches with an IPv4 address, any IP added SHOULD be let through.
-            if not re.search(r"\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b", self.Edit_IP.toPlainText()):
+            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Edit_IP.toPlainText()):
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setText("Enter a valid IP address.")
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
