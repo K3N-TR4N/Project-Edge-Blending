@@ -17,6 +17,7 @@ from matplotlib.patches import PathPatch
 
 import socket
 import pickle
+from win32api import GetSystemMetrics
 
 class ImageWindow(QMainWindow):
     def __init__(self):
@@ -35,8 +36,8 @@ class ImageWindow(QMainWindow):
         self.line_area_points = {}
         self.line_area_shapes = {}
 
-        self.window_width = 2560
-        self.window_height = 1440
+        self.window_width = GetSystemMetrics(0)
+        self.window_height = GetSystemMetrics(1)
         self.axes.set_xlim([0, self.window_width])
         self.axes.set_ylim([0, self.window_height])
 
@@ -91,7 +92,7 @@ class ImageWindow(QMainWindow):
         self.axes.set_yticklabels([])
 
         # Set the figure size to 1920x1080 pixels
-        self.figure.set_size_inches(25.6, 14.4)
+        self.figure.set_size_inches(self.window_width / 100.0, self.window_height / 100.0)
 
         # save output as transparent
         self.figure.tight_layout(pad=0)
@@ -108,10 +109,10 @@ class ImageWindow(QMainWindow):
         
 
         self.tcpServer = QTcpServer(self)
-        HOST = QHostAddress('0.0.0.0')
+        HOST = QHostAddress("0.0.0.0")
         self.tcpServer.newConnection.connect(self.incomingConnection)
         if not self.tcpServer.listen(HOST, self.PORT):
-            test = 0
+            print("none")
         
             
 
@@ -165,11 +166,7 @@ class ImageWindow(QMainWindow):
                         self.setCentralWidget(self.image_label)
         '''
     def incomingConnection(self):
-        clientConnection = self.tcpServer.nextPendingConnection()
-
-        message = "testering"
-        message = pickle.dumps(message, -1)
-        
+        clientConnection = self.tcpServer.nextPendingConnection()        
 
         clientConnection.waitForReadyRead()
         
@@ -182,6 +179,8 @@ class ImageWindow(QMainWindow):
         
         if str(received).strip() == "send":
             #send data
+            sendArray = [self.control_points_list, self.line_area_points, self.window_width, self.window_height]
+            clientConnection.write(pickle.dumps(sendArray, -1))
             send = 0
         else:
             #set curves
@@ -214,7 +213,7 @@ class ImageWindow(QMainWindow):
         self.axes.set_yticklabels([])
 
         # Set the figure size to 1920x1080 pixels
-        self.figure.set_size_inches(25.6, 14.4)
+        self.figure.set_size_inches(self.window_width / 100.0, self.window_height / 100)
 
         # save output as transparent
 

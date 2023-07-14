@@ -59,8 +59,8 @@ class GeometryEditingWindow(QMainWindow):
         super(GeometryEditingWindow, self).__init__()
         loadUi("GeometryEditingWindow.ui", self)
 
-        self.window_width = 1920
-        self.window_height = 1080
+        self.window_width = 1280
+        self.window_height = 720
         self.boundary_size = 100
         self.boundaries_x = [0, 0, self.window_width, self.window_width, 0]
         self.boundaries_y = [self.window_height, 0, 0, self.window_height, self.window_height]
@@ -98,47 +98,41 @@ class GeometryEditingWindow(QMainWindow):
         self.client_servers_IP_addresses = {}
 
         self.PORT = 64012
+        self.retrieveProjectors()
 
         plt.connect('button_press_event', self.leftMouseClicked)
         self.horizontalLayout_1.addWidget(self.canvas)
 
-        #'''
-        control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
-        control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
-        control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+        self.GetInfo()
+        if (self.control_points_list or self.line_area_points):
+            for pointName, pointValue in self.control_points_list.items():
+                self.bezier_curves[pointName] = PathPatch(Path(pointValue, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
         
-        initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
+            for curve in self.bezier_curves:
+                self.axes.add_patch(self.bezier_curves[curve])
+        else:
+            control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
+            control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+            control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+        
+            initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
 
-        self.index = 0
+            self.index = 0
 
-        for control_points in initial_sets_of_control_points:
-            self.index = self.index + 1
-            self.control_points_list['Curve ' + str(self.index)] = control_points
-            self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+            for control_points in initial_sets_of_control_points:
+                self.index = self.index + 1
+                self.control_points_list['Curve ' + str(self.index)] = control_points
+                self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
             
-        for curve in self.bezier_curves:
-            self.axes.add_patch(self.bezier_curves[curve])
-        #'''
+            for curve in self.bezier_curves:
+                self.axes.add_patch(self.bezier_curves[curve])
+        
+
+        
 
         #####################################################################
 
-        if not self.bezier_curves.keys():
-            self.Curve_box.addItem('No Curves')
-        else:
-            self.Curve_box.addItems(list(self.bezier_curves.keys()))
-            
-            first_curve_control_points = self.control_points_list[self.Curve_box.currentText()]
-
-            self.control_point_1_x_line.setText(str(first_curve_control_points[0][0]))
-            self.control_point_1_y_line.setText(str(first_curve_control_points[0][1]))
-            self.control_point_2_x_line.setText(str(first_curve_control_points[1][0]))
-            self.control_point_2_y_line.setText(str(first_curve_control_points[1][1]))
-            self.control_point_3_x_line.setText(str(first_curve_control_points[2][0]))
-            self.control_point_3_y_line.setText(str(first_curve_control_points[2][1]))
-            self.control_point_4_x_line.setText(str(first_curve_control_points[3][0]))
-            self.control_point_4_y_line.setText(str(first_curve_control_points[3][1]))
-
-            self.redrawCanvas()
+        self.setTextBoxes()
         
         self.Curve_box.currentTextChanged.connect(self.selectedCurveChanged)
         self.Client_projectors_box.currentTextChanged.connect(self.clientComboBoxChanged)
@@ -167,7 +161,25 @@ class GeometryEditingWindow(QMainWindow):
         
         self.Back_btn.clicked.connect(self.gotoMainWindow)
 
-        self.retrieveProjectors()
+    def setTextBoxes(self):
+        if not self.bezier_curves.keys():
+            self.Curve_box.addItem('No Curves')
+        else:
+            self.Curve_box.clear()
+            self.Curve_box.addItems(list(self.bezier_curves.keys()))
+            
+            first_curve_control_points = self.control_points_list[self.Curve_box.currentText()]
+
+            self.control_point_1_x_line.setText(str(first_curve_control_points[0][0]))
+            self.control_point_1_y_line.setText(str(first_curve_control_points[0][1]))
+            self.control_point_2_x_line.setText(str(first_curve_control_points[1][0]))
+            self.control_point_2_y_line.setText(str(first_curve_control_points[1][1]))
+            self.control_point_3_x_line.setText(str(first_curve_control_points[2][0]))
+            self.control_point_3_y_line.setText(str(first_curve_control_points[2][1]))
+            self.control_point_4_x_line.setText(str(first_curve_control_points[3][0]))
+            self.control_point_4_y_line.setText(str(first_curve_control_points[3][1]))
+
+            self.redrawCanvas()
 
     def retrieveProjectors(self):
         client_servers_info_file = open('client_ip.txt', 'r')
@@ -260,9 +272,10 @@ class GeometryEditingWindow(QMainWindow):
                 del self.line_area_shapes[self.Curve_box.currentText()]
 
             self.redrawCanvas()
-            self.SendInfo()
+            
             
             self.evaluateLineCurve(line_name = self.Curve_box.currentText(), new_control_points = new_control_points)
+            self.SendInfo()
         
     def addNewCurveClicked(self):
 
@@ -304,6 +317,7 @@ class GeometryEditingWindow(QMainWindow):
             self.Curve_box.setCurrentText('Curve ' + str(len(self.control_points_list)))
 
         self.evaluateLineCurve(line_name = new_bezier_curve_name, new_control_points = new_control_points)
+        self.SendInfo()
 
     def evaluateLineEditFields(self):
 
@@ -411,6 +425,7 @@ class GeometryEditingWindow(QMainWindow):
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (0.0, float(self.window_height))]
         self.makeFillArea(control_points_line_area)
+        self.SendInfo()
             
     def fillLineAreaRight(self):
         if self.line_control_point_1[1] == 0:
@@ -426,6 +441,7 @@ class GeometryEditingWindow(QMainWindow):
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (float(self.window_width), float(self.window_height))]
         self.makeFillArea(control_points_line_area)
+        self.SendInfo()
 
     def fillLineAreaAbove(self):
         if self.line_control_point_1[0] == 0:
@@ -441,6 +457,7 @@ class GeometryEditingWindow(QMainWindow):
                                         (float(self.window_width), float(self.window_height)),
                                         (0.0, float(self.window_height))]
         self.makeFillArea(control_points_line_area)
+        self.SendInfo()
 
     def fillLineAreaBelow(self):
         if self.line_control_point_1[0] == 0:
@@ -456,6 +473,7 @@ class GeometryEditingWindow(QMainWindow):
                                         (float(self.window_width), 0.0),
                                         (0.0, 0.0)]
         self.makeFillArea(control_points_line_area)
+        self.SendInfo()
             
     def makeFillArea(self, control_points_line_area):
                 
@@ -527,6 +545,7 @@ class GeometryEditingWindow(QMainWindow):
                 self.Curve_box.removeItem(self.Curve_box.currentIndex())
 
             self.redrawCanvas()
+            self.SendInfo()
 
 
     def selectedCurveChanged(self):
@@ -672,34 +691,91 @@ class GeometryEditingWindow(QMainWindow):
                     self.control_point_4_y_line.setText(str(round(event.ydata, 2)))
                     self.setControlPoints()
 
+
+    ## Client combo box text changed signal
+    #
+    # Checks whether the client combo box was changed and updates the bezier info from that particular client
+    def clientComboBoxChanged(self):
+        self.GetInfo()
+        if(self.control_points_list or self.line_area_points):
+            for pointName, pointValue in self.control_points_list.items():
+                self.bezier_curves[pointName] = PathPatch(Path(pointValue, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+        
+            for curve in self.bezier_curves:
+                self.axes.add_patch(self.bezier_curves[curve])
+        else:
+            control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
+            control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+            control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+        
+            initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
+
+            self.index = 0
+
+            for control_points in initial_sets_of_control_points:
+                self.index = self.index + 1
+                self.control_points_list['Curve ' + str(self.index)] = control_points
+                self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+            
+            for curve in self.bezier_curves:
+                self.axes.add_patch(self.bezier_curves[curve])
+
+        self.setTextBoxes()
+
     ###########################################################
     # NETWORKING
     ###########################################################
 
-    def clientComboBoxChanged(self):
-        #self.GetInfo()
-        test = 1
-
+    ## Retrieves bezier curve information from a given client
+    #
+    # Uses the Clients combo box (Client_projectors_box) and the client_IP.txt file to get the current client
     def GetInfo(self):
+        ## IP of the currently selected client
         clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
+
+        ## QTcpSocket variable representing the host side connection with the client.
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
-        self.tcpSocket.waitForConnected(1000)
+        self.tcpSocket.waitForConnected(5000)
+
+        ## Variable containing information to indicate that the client should send information back
         toSend = "send"
         toSend = pickle.dumps(toSend, -1)
+
+        # Send the info to the client
         self.tcpSocket.write(toSend)
+        
+        # Wait for the client's response
         self.tcpSocket.waitForReadyRead()
 
+        ## Read in the information from the client. Will be in the format of an array of two dictionaries
+        arrayIn = pickle.loads(self.tcpSocket.readAll())
+        self.control_points_list = arrayIn[0]
+        self.line_area_points = arrayIn[1]
+        self.window_width = arrayIn[2]
+        self.window_height = arrayIn[3]
 
+    ## Sends bezier curve information to a given client
+    #
+    # Uses the Clients combo box (Client_projectors_box) and the client_IP.txt file to get the current client
     def SendInfo(self):
+        ## IP of the currently selected client
         clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
+
+        ## QTcpSocket variable representing the host side connection with the client.
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
-        self.tcpSocket.waitForConnected(10000)
+        self.tcpSocket.waitForConnected(5000)
+
+        ## Variable containing bezier information to send to client
         toSend = [self.control_points_list, self.line_area_points]
         toSend = pickle.dumps(toSend, -1)
+
+        # Sends to client
         self.tcpSocket.write(toSend)
         self.tcpSocket.waitForReadyRead()
+
+        # (Not necessary, loads a confirmation from client, may be useful)
         print(pickle.loads(self.tcpSocket.readAll()))
 
     def gotoMainWindow(self):
@@ -731,7 +807,9 @@ class ProjectorConfigurationWindow(QMainWindow):
         widget.addWidget(mainWindow)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
-    # Fetches the list of clients from client_ip.txt and puts it into the Client_list list widget
+    ## Fetches the list of clients from client_ip.txt and puts it into the Client_list list widget
+    #
+    #
     def listClients(self):
         # Clear the list
         self.Client_list.clear()
@@ -752,7 +830,9 @@ class ProjectorConfigurationWindow(QMainWindow):
         self.Add_name.clear()
         self.Add_IP.clear()
 
-    # If an item in the list is clicked, allow user to edit and take the information from there into the edit textedits
+    ## If an item in the list is clicked, allow user to edit and take the information from there into the edit textedits
+    #
+    #
     def listItemClicked(self):
         self.Edit_name.setEnabled(True)
         self.Edit_IP.setEnabled(True)
@@ -761,7 +841,9 @@ class ProjectorConfigurationWindow(QMainWindow):
         self.Edit_name.setText(self.Client_list.currentItem().text().split('-')[0])
         self.Edit_IP.setText(self.Client_list.currentItem().text().split('-')[1])
         
-    # This function adds a client to the client_ip.txt file
+    ## This function adds a client to the client_ip.txt file
+    #
+    #
     def addClient(self):
         # If either the name or IP are blank you are disallowed from adding it.
         if self.Add_name.toPlainText() != "" and self.Add_IP.toPlainText() != "":
@@ -781,7 +863,9 @@ class ProjectorConfigurationWindow(QMainWindow):
             # List clients again to refresh
             self.listClients()
 
-    # This function edits an existing line in the client_ip.txt file
+    ## This function edits an existing line in the client_ip.txt file
+    #
+    #
     def editClient(self):
         # If either the name or IP are blank you are disallowed from committing that edit.
         if self.Edit_name.toPlainText() != "" and self.Edit_IP.toPlainText() != "":
@@ -816,13 +900,18 @@ class ProjectorConfigurationWindow(QMainWindow):
             # List clients again to refresh
             self.listClients()
     
-    # This function
+    ## Allows the user to delete clients from the list
     def deleteClient(self):
+        ## Message box to confirm the user wishes to delete the client
         confirmMessageBox = QMessageBox()
         confirmMessageBox.setText("Are you sure you want to delete this client?")
         confirmMessageBox.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
         confirmMessageBox.setDefaultButton(QMessageBox.Cancel)
+
+        ## Result of message box dialog (either OK or Cancel)
         result = confirmMessageBox.exec()
+
+        # Only delete if result is ok, if cancel, do nothing
         if result == QMessageBox.Ok:
             clients = open("client_ip.txt", "r")
             ips = clients.readlines()
