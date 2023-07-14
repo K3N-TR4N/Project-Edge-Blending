@@ -3,8 +3,6 @@ import re
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QApplication, QMainWindow, QMessageBox
-from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
-from PyQt5.QtCore import QDataStream, QIODevice
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.path import Path
@@ -14,9 +12,6 @@ from matplotlib.backend_bases import MouseButton
 import matplotlib
 import matplotlib.pyplot as plt        
 matplotlib.use('Qt5Agg')
-
-import socket
-import pickle
 
 # This file contains all the functionalities of the widgets between the windows
 
@@ -97,8 +92,6 @@ class GeometryEditingWindow(QMainWindow):
 
         self.client_servers_IP_addresses = {}
 
-        self.PORT = 64012
-
         plt.connect('button_press_event', self.leftMouseClicked)
         self.horizontalLayout_1.addWidget(self.canvas)
 
@@ -141,7 +134,6 @@ class GeometryEditingWindow(QMainWindow):
             self.redrawCanvas()
         
         self.Curve_box.currentTextChanged.connect(self.selectedCurveChanged)
-        self.Client_projectors_box.currentTextChanged.connect(self.clientComboBoxChanged)
 
         self.Add_curve_btn.clicked.connect(self.addNewCurveClicked)
         self.Remove_curve_btn.clicked.connect(self.removeCurveClicked)
@@ -260,8 +252,7 @@ class GeometryEditingWindow(QMainWindow):
                 del self.line_area_shapes[self.Curve_box.currentText()]
 
             self.redrawCanvas()
-            self.SendInfo()
-            
+
             self.evaluateLineCurve(line_name = self.Curve_box.currentText(), new_control_points = new_control_points)
         
     def addNewCurveClicked(self):
@@ -618,7 +609,7 @@ class GeometryEditingWindow(QMainWindow):
 
         if self.contrast_curve_click_count_parity % 2 == 0:
             self.contrast_curve = False
-            self.contrast_curve_click_count_parity =0
+            self.contrast_curve_click_count_parity = 0
         else:
             self.contrast_curve = True
 
@@ -646,71 +637,61 @@ class GeometryEditingWindow(QMainWindow):
             self.show_control_points = True
         self.redrawCanvas()
 
+    def setMouseCursorCoordinates(self, cursor_x, cursor_y, x_line_edit, y_line_edit):
+        if cursor_x != None and cursor_y != None:
+            if abs(cursor_x - 0) <= 10.0 and cursor_y >= 0 and cursor_y <= self.window_height:
+                x_line_edit.setText('0.0')
+                y_line_edit.setText(str(round(cursor_y, 2)))
+            elif abs(cursor_x - self.window_width) <= 10.0 and cursor_y >= 0 and cursor_y <= self.window_height:
+                x_line_edit.setText(str(self.window_width))
+                y_line_edit.setText(str(round(cursor_y, 2)))
+            elif abs(cursor_y - 0) <= 10.0 and cursor_x >= 0 and cursor_x <= self.window_width:
+                x_line_edit.setText(str(round(cursor_x, 2)))
+                y_line_edit.setText('0.0')
+            elif abs(cursor_y - self.window_height) <= 10.0 and cursor_x >= 0 and cursor_x <= self.window_width:
+                x_line_edit.setText(str(round(cursor_x, 2)))
+                y_line_edit.setText(str(self.window_height))
+            elif abs(cursor_x - 0.0) <= 10.0 and abs(cursor_y - self.window_height) <= 10.0:
+                x_line_edit.setText('0.0')
+                y_line_edit.setText(str(self.window_height))
+            elif abs(cursor_x - 0.0) <= 10.0 and abs(cursor_y - 0.0) <= 10.0:
+                x_line_edit.setText('0.0')
+                y_line_edit.setText('0.0')
+            elif abs(cursor_x - self.window_width) <= 10.0 and abs(cursor_y - 0.0) <= 10.0:
+                x_line_edit.setText(str(self.window_width))
+                y_line_edit.setText('0.0')
+            elif abs(cursor_x - self.window_width) <= 10.0 and abs(cursor_y - self.window_height) <= 10.0:
+                x_line_edit.setText(str(self.window_width))
+                y_line_edit.setText(str(self.window_height))
+            elif x_line_edit == self.control_point_2_x_line or x_line_edit == self.control_point_3_x_line:
+                x_line_edit.setText(str(round(cursor_x, 2)))
+                y_line_edit.setText(str(round(cursor_y, 2)))
+
     def leftMouseClicked(self, event):
         if event.button == MouseButton.LEFT:
             if self.control_point_1_click_cursor_enable:
-                if event.xdata != None and event.ydata != None:
-                    self.control_point_1_x_line.setText(str(round(event.xdata, 2)))
-                    self.control_point_1_y_line.setText(str(round(event.ydata, 2)))
-                    self.setControlPoints()
+                self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_1_x_line, self.control_point_1_y_line)
+                self.setControlPoints()
 
             elif self.control_point_2_click_cursor_enable:
-                if event.xdata != None and event.ydata != None:
-                    self.control_point_2_x_line.setText(str(round(event.xdata, 2)))
-                    self.control_point_2_y_line.setText(str(round(event.ydata, 2)))
-                    self.setControlPoints()
+                self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_2_x_line, self.control_point_2_y_line)
+                self.setControlPoints()
 
             elif self.control_point_3_click_cursor_enable:
-                if event.xdata != None and event.ydata != None:
-                    self.control_point_3_x_line.setText(str(round(event.xdata, 2)))
-                    self.control_point_3_y_line.setText(str(round(event.ydata, 2)))
-                    self.setControlPoints()
+                self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_3_x_line, self.control_point_3_y_line)
+                self.setControlPoints()
             
             elif self.control_point_4_click_cursor_enable:
-                if event.xdata != None and event.ydata != None:
-                    self.control_point_4_x_line.setText(str(round(event.xdata, 2)))
-                    self.control_point_4_y_line.setText(str(round(event.ydata, 2)))
-                    self.setControlPoints()
+                self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_4_x_line, self.control_point_4_y_line)
+                self.setControlPoints()
 
     ###########################################################
-    # NETWORKING
-    ###########################################################
-
-    def clientComboBoxChanged(self):
-        #self.GetInfo()
-        test = 1
-
-    def GetInfo(self):
-        clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
-        self.tcpSocket = QTcpSocket(self)
-        self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
-        self.tcpSocket.waitForConnected(1000)
-        toSend = "send"
-        toSend = pickle.dumps(toSend, -1)
-        self.tcpSocket.write(toSend)
-        self.tcpSocket.waitForReadyRead()
-
-
-    def SendInfo(self):
-        clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
-        self.tcpSocket = QTcpSocket(self)
-        self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
-        self.tcpSocket.waitForConnected(10000)
-        toSend = [self.control_points_list, self.line_area_points]
-        toSend = pickle.dumps(toSend, -1)
-        self.tcpSocket.write(toSend)
-        self.tcpSocket.waitForReadyRead()
-        print(pickle.loads(self.tcpSocket.readAll()))
 
     def gotoMainWindow(self):
         mainWindow = MainWindow()
         widget.addWidget(mainWindow)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
-
-###################################################
-# PROJECTOR CONFIGURATION
-###################################################
 class ProjectorConfigurationWindow(QMainWindow):
     def __init__(self):
         super(ProjectorConfigurationWindow, self).__init__()
@@ -766,7 +747,7 @@ class ProjectorConfigurationWindow(QMainWindow):
         # If either the name or IP are blank you are disallowed from adding it.
         if self.Add_name.toPlainText() != "" and self.Add_IP.toPlainText() != "":
             # This regular expression matches with an IPv4 address, any IP added SHOULD be let through.
-            if not re.search(r"\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b", self.Add_IP.toPlainText()):
+            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Add_IP.toPlainText()):
                 # If the IP address is invalid, open an error message informing the user.
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setText("Enter a valid IP address.")
@@ -786,7 +767,7 @@ class ProjectorConfigurationWindow(QMainWindow):
         # If either the name or IP are blank you are disallowed from committing that edit.
         if self.Edit_name.toPlainText() != "" and self.Edit_IP.toPlainText() != "":
             # This regular expression matches with an IPv4 address, any IP added SHOULD be let through.
-            if not re.search(r"\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b", self.Edit_IP.toPlainText()):
+            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Add_IP.toPlainText()):
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setText("Enter a valid IP address.")
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
