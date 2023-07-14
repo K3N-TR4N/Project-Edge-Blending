@@ -15,7 +15,6 @@ import matplotlib
 import matplotlib.pyplot as plt        
 matplotlib.use('Qt5Agg')
 
-import socket
 import pickle
 
 # This file contains all the functionalities of the widgets between the windows
@@ -653,7 +652,18 @@ class GeometryEditingWindow(QMainWindow):
         else:
             self.show_areas = True
         self.redrawCanvas()
+    
+    def showControlPoints(self):
 
+        self.show_control_points_click_count_parity = self.show_control_points_click_count_parity + 1
+
+        if self.show_control_points_click_count_parity % 2 == 0:
+            self.show_control_points = False
+            self.show_control_points_click_count_parity = 0
+        else:
+            self.show_control_points = True
+        self.redrawCanvas()
+    
     def setMouseCursorCoordinates(self, cursor_x, cursor_y, x_line_edit, y_line_edit):
         if cursor_x != None and cursor_y != None:
             if abs(cursor_x - 0) <= 10.0 and cursor_y >= 0 and cursor_y <= self.window_height:
@@ -765,6 +775,8 @@ class GeometryEditingWindow(QMainWindow):
         self.line_area_points = arrayIn[1]
         self.window_width = arrayIn[2]
         self.window_height = arrayIn[3]
+        self.boundaries_x = [0, 0, self.window_width, self.window_width, 0]
+        self.boundaries_y = [self.window_height, 0, 0, self.window_height, self.window_height]
 
     ## Sends bezier curve information to a given client
     #
