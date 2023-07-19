@@ -109,6 +109,13 @@ class GeometryEditingWindow(QMainWindow):
         
             for curve in self.bezier_curves:
                 self.axes.add_patch(self.bezier_curves[curve])
+
+            for lineName, lineValue in self.line_area_points.items():
+                self.line_area_shapes[lineName] = PathPatch(Path(lineValue, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'none', transform=self.axes.transData)
+
+            for line in self.line_area_shapes:
+                self.axes.add_patch(self.line_area_shapes[line])
+
         else:
             control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
             control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
@@ -125,6 +132,7 @@ class GeometryEditingWindow(QMainWindow):
             
             for curve in self.bezier_curves:
                 self.axes.add_patch(self.bezier_curves[curve])
+            self.SendInfo()
         
 
         
@@ -517,7 +525,7 @@ class GeometryEditingWindow(QMainWindow):
             
                 for changed_curve in changed_curves:
                     new_curve_number = int(str.split(changed_curve, ' ')[1]) - 1
-                    
+                    print("test0")
                     self.control_points_list['Curve ' + str(new_curve_number)] = self.control_points_list[changed_curve]
                     del self.control_points_list[changed_curve]
 
@@ -527,6 +535,11 @@ class GeometryEditingWindow(QMainWindow):
                     if changed_curve in self.line_area_shapes:
                         self.line_area_shapes['Curve ' + str(new_curve_number)] = self.line_area_shapes[changed_curve]
                         del self.line_area_shapes[changed_curve]
+                        print("test1")
+                    if changed_curve in self.line_area_points:
+                        self.line_area_shapes['Curve ' + str(new_curve_number)] = self.line_area_points[changed_curve]
+                        del self.line_area_points[changed_curve]
+                        print("test2")
 
                 self.Curve_box.clear()
                 self.Curve_box.addItems(list(self.bezier_curves.keys()))
@@ -537,6 +550,9 @@ class GeometryEditingWindow(QMainWindow):
         
                 if self.Curve_box.currentText() in self.line_area_shapes:
                     del self.line_area_shapes[self.Curve_box.currentText()]
+
+                if self.Curve_box.currentText() in self.line_area_points:
+                    del self.line_area_points[self.Curve_box.currentText()]
 
                 if not self.bezier_curves.keys():
                     self.Curve_box.addItem('No Curves')
@@ -718,17 +734,29 @@ class GeometryEditingWindow(QMainWindow):
     # Checks whether the client combo box was changed and updates the bezier info from that particular client
     def clientComboBoxChanged(self):
         self.GetInfo()
+        self.axes.clear()
+        self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
+        
+        self.bezier_curves.clear()
+        self.line_area_shapes.clear()
         if(self.control_points_list or self.line_area_points):
             for pointName, pointValue in self.control_points_list.items():
                 self.bezier_curves[pointName] = PathPatch(Path(pointValue, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
         
             for curve in self.bezier_curves:
                 self.axes.add_patch(self.bezier_curves[curve])
+
+            for lineName, lineValue in self.line_area_points.items():
+                self.line_area_shapes[lineName] = PathPatch(Path(lineValue, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'none', transform=self.axes.transData)
+
+            for line in self.line_area_shapes:
+                self.axes.add_patch(self.line_area_shapes[line])
+
         else:
             control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
             control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
             control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
-        
+            print ("test")
             initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
 
             self.index = 0
@@ -741,7 +769,17 @@ class GeometryEditingWindow(QMainWindow):
             for curve in self.bezier_curves:
                 self.axes.add_patch(self.bezier_curves[curve])
 
-        self.setTextBoxes()
+            self.SendInfo()
+
+        self.setTextBoxes()    
+        self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
+        self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
+        self.axes.grid(color = 'k')
+        self.canvas.draw() 
+        self.Curve_box.clear()
+        self.Curve_box.addItems(list(self.bezier_curves.keys()))
+        
+       
 
     ###########################################################
     # NETWORKING
