@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1295</width>
+    <width>1280</width>
     <height>720</height>
    </rect>
   </property>
@@ -33,9 +33,9 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>50</y>
+       <y>30</y>
        <width>821</width>
-       <height>481</height>
+       <height>521</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_1"/>
@@ -45,9 +45,9 @@
     <property name="geometry">
      <rect>
       <x>870</x>
-      <y>90</y>
+      <y>70</y>
       <width>331</width>
-      <height>481</height>
+      <height>521</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -62,7 +62,7 @@
        <x>0</x>
        <y>0</y>
        <width>331</width>
-       <height>230</height>
+       <height>263</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_1">
@@ -71,11 +71,27 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="2" column="2">
-         <widget class="QLineEdit" name="control_point_2_y_line"/>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="control_point_2_x_line"/>
         </item>
-        <item row="0" column="0">
-         <widget class="QComboBox" name="Curve_box"/>
+        <item row="1" column="2">
+         <widget class="QLineEdit" name="control_point_1_y_line"/>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLineEdit" name="control_point_3_x_line"/>
+        </item>
+        <item row="4" column="1">
+         <widget class="QLineEdit" name="control_point_4_x_line"/>
+        </item>
+        <item row="4" column="2">
+         <widget class="QLineEdit" name="control_point_4_y_line"/>
+        </item>
+        <item row="5" column="0">
+         <widget class="QPushButton" name="Set_control_points_btn">
+          <property name="text">
+           <string>Set curve</string>
+          </property>
+         </widget>
         </item>
         <item row="1" column="0">
          <widget class="QPushButton" name="Control_point_1_btn">
@@ -84,67 +100,23 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
-         <widget class="QPushButton" name="Control_point_4_btn">
-          <property name="text">
-           <string>Control Point 4</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QLineEdit" name="control_point_1_y_line"/>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="y_label">
-          <property name="text">
-           <string>Y</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QPushButton" name="Control_point_2_btn">
-          <property name="text">
-           <string>Control Point 2</string>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="2">
          <widget class="QLineEdit" name="control_point_3_y_line"/>
+        </item>
+        <item row="5" column="2">
+         <widget class="QPushButton" name="Remove_curve_btn">
+          <property name="text">
+           <string>Remove curve</string>
+          </property>
+         </widget>
         </item>
         <item row="0" column="1">
          <widget class="QLabel" name="x_label">
           <property name="text">
            <string>X</string>
           </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLineEdit" name="control_point_3_x_line"/>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="control_point_1_x_line"/>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLineEdit" name="control_point_2_x_line"/>
-        </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="Control_point_3_btn">
-          <property name="text">
-           <string>Control Point 3</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="0">
-         <widget class="QPushButton" name="Set_control_points_btn">
-          <property name="text">
-           <string>Set Control Points</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="2">
-         <widget class="QPushButton" name="Remove_curve_btn">
-          <property name="text">
-           <string>Remove curve</string>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -155,11 +127,84 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="2">
-         <widget class="QLineEdit" name="control_point_4_y_line"/>
+        <item row="2" column="2">
+         <widget class="QLineEdit" name="control_point_2_y_line"/>
         </item>
-        <item row="4" column="1">
-         <widget class="QLineEdit" name="control_point_4_x_line"/>
+        <item row="2" column="0">
+         <widget class="QPushButton" name="Control_point_2_btn">
+          <property name="text">
+           <string>Control Point 2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="Control_point_4_btn">
+          <property name="text">
+           <string>Control Point 4</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="control_point_1_x_line"/>
+        </item>
+        <item row="0" column="0">
+         <widget class="QComboBox" name="Curve_box"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="Control_point_3_btn">
+          <property name="text">
+           <string>Control Point 3</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QLabel" name="y_label">
+          <property name="text">
+           <string>Y</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QLabel" name="curve_opacity_label">
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="text">
+           <string>Curve Opacity: </string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::AutoText</enum>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="Curve_opacity_box">
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="suffix">
+           <string>%</string>
+          </property>
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>100.000000000000000</double>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -169,7 +214,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>260</y>
+       <y>300</y>
        <width>331</width>
        <height>92</height>
       </rect>
@@ -186,6 +231,20 @@
         </item>
         <item>
          <layout class="QGridLayout" name="gridLayout_5">
+          <item row="1" column="1">
+           <widget class="QPushButton" name="Below_line_btn">
+            <property name="text">
+             <string>Below Line</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="Above_line_btn">
+            <property name="text">
+             <string>Above Line</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <widget class="QPushButton" name="Left_line_btn">
             <property name="text">
@@ -200,20 +259,6 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="Above_line_btn">
-            <property name="text">
-             <string>Above Line</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPushButton" name="Below_line_btn">
-            <property name="text">
-             <string>Below Line</string>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
        </layout>
@@ -224,7 +269,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>390</y>
+       <y>430</y>
        <width>331</width>
        <height>92</height>
       </rect>
@@ -288,13 +333,41 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1295</width>
+     <width>1280</width>
      <height>26</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>control_point_1_x_line</tabstop>
+  <tabstop>control_point_1_y_line</tabstop>
+  <tabstop>control_point_2_x_line</tabstop>
+  <tabstop>control_point_2_y_line</tabstop>
+  <tabstop>control_point_3_x_line</tabstop>
+  <tabstop>control_point_3_y_line</tabstop>
+  <tabstop>control_point_4_x_line</tabstop>
+  <tabstop>control_point_4_y_line</tabstop>
+  <tabstop>Set_control_points_btn</tabstop>
+  <tabstop>Add_curve_btn</tabstop>
+  <tabstop>Remove_curve_btn</tabstop>
+  <tabstop>Curve_opacity_box</tabstop>
+  <tabstop>Left_line_btn</tabstop>
+  <tabstop>Right_line_btn</tabstop>
+  <tabstop>Above_line_btn</tabstop>
+  <tabstop>Below_line_btn</tabstop>
+  <tabstop>Show_contrast_curve_btn</tabstop>
+  <tabstop>Show_areas_btn</tabstop>
+  <tabstop>Show_control_points_btn</tabstop>
+  <tabstop>Curve_box</tabstop>
+  <tabstop>Client_projectors_box</tabstop>
+  <tabstop>Control_point_1_btn</tabstop>
+  <tabstop>Control_point_2_btn</tabstop>
+  <tabstop>Control_point_3_btn</tabstop>
+  <tabstop>Control_point_4_btn</tabstop>
+  <tabstop>Back_btn</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
