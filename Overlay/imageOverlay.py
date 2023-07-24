@@ -52,11 +52,7 @@ class ImageWindow(QMainWindow):
             f.close()
         except FileNotFoundError:
             print("no file")
-            
 
-            
-
-        
         
         '''
         control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
@@ -72,11 +68,13 @@ class ImageWindow(QMainWindow):
         '''
 
         for curveName, value in self.control_points_list.items():
-            bezierCurve = PathPatch(Path(value, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = 'k', edgecolor = 'k', transform = self.axes.transData)
+            opacity = (0, 0, 0, value[1])
+            bezierCurve = PathPatch(Path(value[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = opacity, edgecolor = opacity, transform = self.axes.transData)
             self.axes.add_patch(bezierCurve)
 
         for areaName, value in self.line_area_points.items():
-            bezierArea = PathPatch(Path(value, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'k', edgecolor = 'k', transform=self.axes.transData)
+            opacity = (0, 0, 0, value[1])
+            bezierArea = PathPatch(Path(value[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = opacity, edgecolor = opacity, transform=self.axes.transData)
             self.axes.add_patch(bezierArea)
         #plt.show()
 
@@ -114,57 +112,7 @@ class ImageWindow(QMainWindow):
         if not self.tcpServer.listen(HOST, self.PORT):
             print("none")
         
-            
 
-        '''
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((self.HOST, self.PORT))
-            s.listen()
-            while True:
-                conn, addr = s.accept()
-                with conn:
-                    while True:
-                        data = conn.recv(1024)
-                        if not data:
-                            break
-                        incoming = pickle.loads(data)
-                        print(incoming)
-                        conn.sendall(pickle.dumps("test", -1))
-                        for curve in self.control_points_list:
-                            bezierCurve = PathPatch(Path(curve, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = 'k', edgecolor = 'k', transform = self.axes.transData)
-                            self.axes.add_patch(bezierCurve)
-
-                        for area in self.line_area_points:
-                            bezierArea = PathPatch(Path(area, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'k', edgecolor = 'k', transform=self.axes.transData)
-                            self.axes.add_patch(bezierArea)
-                        #plt.show()
-
-                        self.axes.spines['top'].set_visible(False)
-                        self.axes.spines['right'].set_visible(False)
-                        self.axes.spines['bottom'].set_visible(False)
-                        self.axes.spines['left'].set_visible(False)
-
-                        # Remove the axis ticks and labels
-                        self.axes.set_xticks([])
-                        self.axes.set_yticks([])
-                        self.axes.set_xticklabels([])
-                        self.axes.set_yticklabels([])
-
-                        # Set the figure size to 1920x1080 pixels
-                        figure.set_size_inches(25.6, 14.4)
-
-                        # save output as transparent
-                        figure.tight_layout(pad=0)
-                        plt.savefig('figure.png', transparent = True, dpi=100)
-
-                        #Load the image
-                        self.image_path = "figure.png"
-                        self.image_label = QLabel(self)
-                        self.image_label.setPixmap(QPixmap(self.image_path))
-
-                        # Set the image label as the central widget
-                        self.setCentralWidget(self.image_label)
-        '''
     def incomingConnection(self):
         clientConnection = self.tcpServer.nextPendingConnection()        
 
@@ -189,48 +137,50 @@ class ImageWindow(QMainWindow):
             self.line_area_points = received[1]
             clientConnection.write(pickle.dumps("received info", -1))
         
-        self.axes.clear()
-        self.axes.set_xlim([0, self.window_width])
-        self.axes.set_ylim([0, self.window_height])
-        for curveName, value in self.control_points_list.items():
-            bezierCurve = PathPatch(Path(value, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = 'k', edgecolor = 'k', transform = self.axes.transData)
+            self.axes.clear()
+            self.axes.set_xlim([0, self.window_width])
+            self.axes.set_ylim([0, self.window_height])
+            for curveName, value in self.control_points_list.items():
+                opacity = (0, 0, 0, value[1])
+                bezierCurve = PathPatch(Path(value[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = opacity, edgecolor = (0, 0, 0, 0.01), transform = self.axes.transData)
+                self.axes.add_patch(bezierCurve)
+
+            for areaName, value in self.line_area_points.items():
+                opacity = (0, 0, 0, value[1])
+                bezierArea = PathPatch(Path(value[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = opacity, edgecolor = (0, 0, 0, 0.01), transform=self.axes.transData)
+                self.axes.add_patch(bezierArea)
+
             
-            self.axes.add_patch(bezierCurve)
+            self.axes.spines['top'].set_visible(False)
+            self.axes.spines['right'].set_visible(False)
+            self.axes.spines['bottom'].set_visible(False)
+            self.axes.spines['left'].set_visible(False)
 
-        for areaName, value in self.line_area_points.items():
-            bezierArea = PathPatch(Path(value, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'k', edgecolor = 'k', transform=self.axes.transData)
-            self.axes.add_patch(bezierArea)
-            
-        self.axes.spines['top'].set_visible(False)
-        self.axes.spines['right'].set_visible(False)
-        self.axes.spines['bottom'].set_visible(False)
-        self.axes.spines['left'].set_visible(False)
+            # Remove the axis ticks and labels
+            self.axes.set_xticks([])
+            self.axes.set_yticks([])
+            self.axes.set_xticklabels([])
+            self.axes.set_yticklabels([])
 
-        # Remove the axis ticks and labels
-        self.axes.set_xticks([])
-        self.axes.set_yticks([])
-        self.axes.set_xticklabels([])
-        self.axes.set_yticklabels([])
+            # Set the figure size to 1920x1080 pixels
+            self.figure.set_size_inches(self.window_width / 100.0, self.window_height / 100)
 
-        # Set the figure size to 1920x1080 pixels
-        self.figure.set_size_inches(self.window_width / 100.0, self.window_height / 100)
+            # save output as transparent
 
-        # save output as transparent
+            plt.savefig('figure.png', transparent = True, dpi=100)
 
-        plt.savefig('figure.png', transparent = True, dpi=100)
+            #Load the image
+            self.image_path = "figure.png"
+            self.image_label = QLabel(self)
+            self.image_label.setPixmap(QPixmap(self.image_path))
 
-        #Load the image
-        self.image_path = "figure.png"
-        self.image_label = QLabel(self)
-        self.image_label.setPixmap(QPixmap(self.image_path))
+            # Set the image label as the central widget
+            self.setCentralWidget(self.image_label)
 
-        # Set the image label as the central widget
-        self.setCentralWidget(self.image_label)
-
-        f = open(self.fileName, "wb")
-        array = [self.control_points_list, self.line_area_points]
-        f.write(pickle.dumps(array, -1))
-        f.close()
+            f = open(self.fileName, "wb")
+            array = [self.control_points_list, self.line_area_points]
+            f.write(pickle.dumps(array, -1))
+            f.close()
         
 
 
@@ -243,6 +193,7 @@ if __name__ == "__main__":
 
     # Produces a borderless window
     window.setWindowFlags(Qt.FramelessWindowHint)
+    #window.setWindowFlags(Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
 
     # This indicates that the widget should have a translucent background
     window.setAttribute(Qt.WA_TranslucentBackground)
