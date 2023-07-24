@@ -756,13 +756,13 @@ class GeometryEditingWindow(QMainWindow):
         self.line_area_shapes.clear()
         if(self.control_points_list or self.line_area_points):
             for pointName, pointValue in self.control_points_list.items():
-                self.bezier_curves[pointName] = PathPatch(Path(pointValue, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+                self.bezier_curves[pointName] = PathPatch(Path(pointValue[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
         
             for curve in self.bezier_curves:
                 self.axes.add_patch(self.bezier_curves[curve])
 
             for lineName, lineValue in self.line_area_points.items():
-                self.line_area_shapes[lineName] = PathPatch(Path(lineValue, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'none', transform=self.axes.transData)
+                self.line_area_shapes[lineName] = PathPatch(Path(lineValue[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'none', transform=self.axes.transData)
 
             for line in self.line_area_shapes:
                 self.axes.add_patch(self.line_area_shapes[line])
