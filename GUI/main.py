@@ -120,7 +120,7 @@ class GeometryEditingWindow(QMainWindow):
 
             for control_points in initial_sets_of_control_points:
                 self.index = self.index + 1
-                self.control_points_list['Curve ' + str(self.index)] = control_points
+                self.control_points_list['Curve ' + str(self.index)] = [control_points, 1.0]
                 self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
             
             for curve in self.bezier_curves:
@@ -167,7 +167,7 @@ class GeometryEditingWindow(QMainWindow):
             self.Curve_box.clear()
             self.Curve_box.addItems(list(self.bezier_curves.keys()))
             
-            first_curve_control_points = self.control_points_list[self.Curve_box.currentText()]
+            first_curve_control_points = self.control_points_list[self.Curve_box.currentText()][0]
 
             self.control_point_1_x_line.setText(str(first_curve_control_points[0][0]))
             self.control_point_1_y_line.setText(str(first_curve_control_points[0][1]))
@@ -197,35 +197,39 @@ class GeometryEditingWindow(QMainWindow):
         self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
 
         if self.Curve_box.currentText() != 'No Curves' and self.show_control_points == True:
-            for control_points in self.control_points_list[self.Curve_box.currentText()]:
+            for control_points in self.control_points_list[self.Curve_box.currentText()][0]:
                 self.axes.plot(control_points[0], control_points[1], 'ro')
 
         for curve in self.bezier_curves:
+            curve_opacity_alpha_value = self.control_points_list[curve][1]
+
             if curve == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == True:
-                self.bezier_curves[curve].set(edgecolor = 'r', facecolor = 'r')
+                self.bezier_curves[curve].set(facecolor = (1, 0, 0, curve_opacity_alpha_value), edgecolor = (1, 0, 0, curve_opacity_alpha_value))
             elif curve == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == False:
-                self.bezier_curves[curve].set(edgecolor = 'r', facecolor = 'None')
+                self.bezier_curves[curve].set(facecolor = 'None', edgecolor = (1, 0, 0, curve_opacity_alpha_value))
             elif curve == self.Curve_box.currentText() and self.contrast_curve == False and self.show_areas == True:
-                self.bezier_curves[curve].set(edgecolor = 'k', facecolor = 'k')
+                self.bezier_curves[curve].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = (0, 0, 0, curve_opacity_alpha_value))
             else:
                 if self.show_areas == True:
-                    self.bezier_curves[curve].set(edgecolor = 'k', facecolor = 'k')
+                    self.bezier_curves[curve].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = (0, 0, 0, curve_opacity_alpha_value))
                 else:
-                    self.bezier_curves[curve].set(edgecolor = 'k', facecolor = 'None')
+                    self.bezier_curves[curve].set(facecolor = 'None', edgecolor = (0, 0, 0, curve_opacity_alpha_value))
                 self.axes.add_patch(self.bezier_curves[curve])
 
         for area in self.line_area_shapes:
+            curve_opacity_alpha_value = self.line_area_points[curve][1]
+
             if area == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == True:
-                self.line_area_shapes[area].set(edgecolor = 'r', facecolor = 'r')
+                self.line_area_shapes[area].set(facecolor = (1, 0, 0, curve_opacity_alpha_value), edgecolor = 'None')
             elif area == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == False:
-                self.line_area_shapes[area].set(edgecolor = 'r', facecolor = 'None')
+                self.line_area_shapes[area].set(facecolor = 'None', edgecolor = 'None')
             elif area == self.Curve_box.currentText() and self.contrast_curve == False and self.show_areas == True:
-                self.line_area_shapes[area].set(edgecolor = 'k', facecolor = 'k')
+                self.line_area_shapes[area].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = 'None')
             else:
                 if self.show_areas == True:
-                    self.line_area_shapes[area].set(edgecolor = 'k', facecolor = 'k')
+                    self.line_area_shapes[area].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = 'None')
                 else:
-                    self.line_area_shapes[area].set(edgecolor = 'k', facecolor = 'None')
+                    self.line_area_shapes[area].set(facecolor = 'None', edgecolor = 'None')
                 self.axes.add_patch(self.line_area_shapes[area])
 
         if self.Curve_box.currentText() in self.bezier_curves:
@@ -252,6 +256,8 @@ class GeometryEditingWindow(QMainWindow):
                 user_control_point_2_y = float(self.control_point_2_y_line.text())
                 user_control_point_3_y = float(self.control_point_3_y_line.text())
                 user_control_point_4_y = float(self.control_point_4_y_line.text())
+
+                user_curve_opacity_alpha_value = round(float(self.Curve_opacity_box.cleanText()) / 100, 2)
             else: 
                 return
             
@@ -264,16 +270,15 @@ class GeometryEditingWindow(QMainWindow):
                 return
 
             new_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
-            self.control_points_list[self.Curve_box.currentText()] = new_control_points
-            self.bezier_curves[self.Curve_box.currentText()] = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+            self.control_points_list[self.Curve_box.currentText()] = [new_control_points, user_curve_opacity_alpha_value]
+            self.bezier_curves[self.Curve_box.currentText()] = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
 
             if self.Curve_box.currentText() in self.line_area_shapes:
                 del self.line_area_shapes[self.Curve_box.currentText()]
 
             self.redrawCanvas()
             
-            
-            self.evaluateLineCurve(line_name = self.Curve_box.currentText(), new_control_points = new_control_points)
+            self.evaluateLineCurve(line_name = self.Curve_box.currentText(), new_control_points = new_control_points, opacity_alpha_value = user_curve_opacity_alpha_value)
             self.SendInfo()
         
     def addNewCurveClicked(self):
@@ -287,6 +292,8 @@ class GeometryEditingWindow(QMainWindow):
             user_control_point_2_y = float(self.control_point_2_y_line.text())
             user_control_point_3_y = float(self.control_point_3_y_line.text())
             user_control_point_4_y = float(self.control_point_4_y_line.text())
+
+            user_curve_opacity_alpha_value = round(float(self.Curve_opacity_box.cleanText()) / 100, 2)
         else: 
             return
         
@@ -300,10 +307,10 @@ class GeometryEditingWindow(QMainWindow):
 
         new_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
 
-        new_bezier_curve = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none')
+        new_bezier_curve = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
         
         new_bezier_curve_name = 'Curve ' + str(len(self.control_points_list) + 1)
-        self.control_points_list[new_bezier_curve_name] = new_control_points
+        self.control_points_list[new_bezier_curve_name] = [new_control_points, user_curve_opacity_alpha_value]
         self.bezier_curves[new_bezier_curve_name] = new_bezier_curve
 
         self.Curve_box.addItem(new_bezier_curve_name)
@@ -315,7 +322,7 @@ class GeometryEditingWindow(QMainWindow):
         else:
             self.Curve_box.setCurrentText('Curve ' + str(len(self.control_points_list)))
 
-        self.evaluateLineCurve(line_name = new_bezier_curve_name, new_control_points = new_control_points)
+        self.evaluateLineCurve(line_name = new_bezier_curve_name, new_control_points = new_control_points, opacity_alpha_value = user_curve_opacity_alpha_value)
         self.SendInfo()
 
     def evaluateLineEditFields(self):
@@ -360,7 +367,7 @@ class GeometryEditingWindow(QMainWindow):
         
         return 'Valid'
     
-    def evaluateLineCurve(self, line_name, new_control_points):
+    def evaluateLineCurve(self, line_name, new_control_points, opacity_alpha_value):
 
         if len(set(new_control_points)) == 2:
             self.Add_curve_btn.setEnabled(False)
@@ -378,6 +385,8 @@ class GeometryEditingWindow(QMainWindow):
             self.line_control_point_name = line_name
             self.line_control_point_1 = new_control_points[0]
             self.line_control_point_4 = new_control_points[3]
+
+            self.line_opacity_alpha_value = opacity_alpha_value
 
             if self.line_control_point_1[1] == self.line_control_point_4[1]:
 
@@ -481,8 +490,8 @@ class GeometryEditingWindow(QMainWindow):
             self.Above_line_btn.setEnabled(False)
             self.Below_line_btn.setEnabled(False)
 
-            self.line_area_points[self.line_control_point_name] = control_points_line_area
-            self.line_area_shapes[self.line_control_point_name] = PathPatch(Path(control_points_line_area, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'r', transform=self.axes.transData)
+            self.line_area_points[self.line_control_point_name] = [control_points_line_area, self.line_opacity_alpha_value]
+            self.line_area_shapes[self.line_control_point_name] = PathPatch(Path(control_points_line_area, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), transform=self.axes.transData)
 
             self.redrawCanvas()
 
@@ -552,7 +561,8 @@ class GeometryEditingWindow(QMainWindow):
         if self.Curve_box.currentText() == 'No Curves' or self.Curve_box.currentText() == '':
             return
         else:
-            selected_curve_control_points = self.control_points_list[self.Curve_box.currentText()]
+            selected_curve_control_points = self.control_points_list[self.Curve_box.currentText()][0]
+            selected_curve_opacity_alpha_value = self.control_points_list[self.Curve_box.currentText()][1]
 
             self.control_point_1_x_line.setText(str(selected_curve_control_points[0][0]))
             self.control_point_1_y_line.setText(str(selected_curve_control_points[0][1]))
@@ -562,6 +572,8 @@ class GeometryEditingWindow(QMainWindow):
             self.control_point_3_y_line.setText(str(selected_curve_control_points[2][1]))
             self.control_point_4_x_line.setText(str(selected_curve_control_points[3][0]))
             self.control_point_4_y_line.setText(str(selected_curve_control_points[3][1]))
+
+            self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
 
             self.redrawCanvas()        
 
