@@ -13,14 +13,17 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QFrame" name="frame_1">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>40</y>
+      <y>70</y>
       <width>821</width>
-      <height>581</height>
+      <height>551</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -33,9 +36,9 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>30</y>
+       <y>0</y>
        <width>821</width>
-       <height>521</height>
+       <height>551</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_1"/>
@@ -47,8 +50,11 @@
       <x>870</x>
       <y>70</y>
       <width>331</width>
-      <height>521</height>
+      <height>551</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
     <property name="frameShape">
      <enum>QFrame::StyledPanel</enum>
@@ -62,122 +68,191 @@
        <x>0</x>
        <y>0</y>
        <width>331</width>
-       <height>263</height>
+       <height>251</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_1">
       <item>
-       <widget class="QComboBox" name="Client_projectors_box"/>
+       <widget class="QComboBox" name="Client_projectors_box">
+        <property name="styleSheet">
+         <string notr="true">color: rgb(255, 255, 255);
+background-color: rgb(89, 89, 89);</string>
+        </property>
+       </widget>
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="2" column="1">
-         <widget class="QLineEdit" name="control_point_2_x_line"/>
-        </item>
-        <item row="1" column="2">
-         <widget class="QLineEdit" name="control_point_1_y_line"/>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLineEdit" name="control_point_3_x_line"/>
-        </item>
-        <item row="4" column="1">
-         <widget class="QLineEdit" name="control_point_4_x_line"/>
+        <item row="3" column="2">
+         <widget class="QLineEdit" name="control_point_2_y_line">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+         </widget>
         </item>
         <item row="4" column="2">
-         <widget class="QLineEdit" name="control_point_4_y_line"/>
+         <widget class="QLineEdit" name="control_point_3_y_line">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QLineEdit" name="control_point_3_x_line">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+         </widget>
         </item>
         <item row="5" column="0">
+         <widget class="QPushButton" name="Control_point_4_btn">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(162, 162, 162);</string>
+          </property>
+          <property name="text">
+           <string>Control Point 4</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
          <widget class="QPushButton" name="Set_control_points_btn">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(162, 162, 162);</string>
+          </property>
           <property name="text">
            <string>Set curve</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="Control_point_1_btn">
-          <property name="text">
-           <string>Control Point 1</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QLineEdit" name="control_point_3_y_line"/>
-        </item>
-        <item row="5" column="2">
+        <item row="7" column="2">
          <widget class="QPushButton" name="Remove_curve_btn">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(162, 162, 162);</string>
+          </property>
           <property name="text">
            <string>Remove curve</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="x_label">
-          <property name="text">
-           <string>X</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
+        <item row="0" column="0">
+         <widget class="QComboBox" name="Curve_box">
+          <property name="styleSheet">
+           <string notr="true">color: rgb(255, 255, 255);
+background-color: rgb(89, 89, 89);
+</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
+        <item row="3" column="1">
+         <widget class="QLineEdit" name="control_point_2_x_line">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="Control_point_2_btn">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(162, 162, 162);</string>
+          </property>
+          <property name="text">
+           <string>Control Point 2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="control_point_1_x_line">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QPushButton" name="Control_point_1_btn">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(162, 162, 162);</string>
+          </property>
+          <property name="text">
+           <string>Control Point 1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QPushButton" name="Control_point_3_btn">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(162, 162, 162);</string>
+          </property>
+          <property name="text">
+           <string>Control Point 3</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="2">
+         <widget class="QLineEdit" name="control_point_4_y_line">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
          <widget class="QPushButton" name="Add_curve_btn">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(162, 162, 162);</string>
+          </property>
           <property name="text">
            <string>Add new curve</string>
           </property>
          </widget>
         </item>
         <item row="2" column="2">
-         <widget class="QLineEdit" name="control_point_2_y_line"/>
-        </item>
-        <item row="2" column="0">
-         <widget class="QPushButton" name="Control_point_2_btn">
-          <property name="text">
-           <string>Control Point 2</string>
+         <widget class="QLineEdit" name="control_point_1_y_line">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
-         <widget class="QPushButton" name="Control_point_4_btn">
-          <property name="text">
-           <string>Control Point 4</string>
+        <item row="5" column="1">
+         <widget class="QLineEdit" name="control_point_4_x_line">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="control_point_1_x_line"/>
-        </item>
-        <item row="0" column="0">
-         <widget class="QComboBox" name="Curve_box"/>
-        </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="Control_point_3_btn">
-          <property name="text">
-           <string>Control Point 3</string>
+         <widget class="QLabel" name="x_label">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(239, 187, 0);</string>
           </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLabel" name="y_label">
           <property name="text">
-           <string>Y</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#000000;&quot;&gt;X / Width&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_7">
-        <item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="y_label">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(239, 187, 0);</string>
+          </property>
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#000000;&quot;&gt;Y / Height&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
          <widget class="QLabel" name="curve_opacity_label">
           <property name="layoutDirection">
            <enum>Qt::LeftToRight</enum>
           </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(239, 187, 0);</string>
+          </property>
           <property name="text">
-           <string>Curve Opacity: </string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#000000;&quot;&gt;Curve Opacity: &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="textFormat">
            <enum>Qt::AutoText</enum>
@@ -187,8 +262,11 @@
           </property>
          </widget>
         </item>
-        <item>
+        <item row="0" column="2">
          <widget class="QDoubleSpinBox" name="Curve_opacity_box">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(255, 255, 255);</string>
+          </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
@@ -214,7 +292,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>300</y>
+       <y>290</y>
        <width>331</width>
        <height>92</height>
       </rect>
@@ -224,8 +302,11 @@
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QLabel" name="Filling_lines_label">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(239, 187, 0);</string>
+          </property>
           <property name="text">
-           <string>Settings for Filling Area for Lines</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; color:#000000;&quot;&gt;Settings for Filling Area for Lines&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -233,6 +314,9 @@
          <layout class="QGridLayout" name="gridLayout_5">
           <item row="1" column="1">
            <widget class="QPushButton" name="Below_line_btn">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(162, 162, 162);</string>
+            </property>
             <property name="text">
              <string>Below Line</string>
             </property>
@@ -240,6 +324,9 @@
           </item>
           <item row="1" column="0">
            <widget class="QPushButton" name="Above_line_btn">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(162, 162, 162);</string>
+            </property>
             <property name="text">
              <string>Above Line</string>
             </property>
@@ -247,6 +334,9 @@
           </item>
           <item row="0" column="0">
            <widget class="QPushButton" name="Left_line_btn">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(162, 162, 162);</string>
+            </property>
             <property name="text">
              <string>Left of Line</string>
             </property>
@@ -254,6 +344,9 @@
           </item>
           <item row="0" column="1">
            <widget class="QPushButton" name="Right_line_btn">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(162, 162, 162);</string>
+            </property>
             <property name="text">
              <string>Right of Line</string>
             </property>
@@ -269,7 +362,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>430</y>
+       <y>420</y>
        <width>331</width>
        <height>92</height>
       </rect>
@@ -279,13 +372,19 @@
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
          <widget class="QLabel" name="Mask_display_label">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(239, 187, 0);</string>
+          </property>
           <property name="text">
-           <string>Mask Display Settings</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; color:#000000;&quot;&gt;Mask Display Settings&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="Show_contrast_curve_btn">
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(162, 162, 162);</string>
+          </property>
           <property name="text">
            <string>Show Selected Curve In Contrasting Color</string>
           </property>
@@ -295,6 +394,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <widget class="QPushButton" name="Show_areas_btn">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(162, 162, 162);</string>
+            </property>
             <property name="text">
              <string>Show Areas</string>
             </property>
@@ -302,6 +404,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="Show_control_points_btn">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(162, 162, 162);</string>
+            </property>
             <property name="text">
              <string>Show Control Points</string>
             </property>
@@ -323,6 +428,9 @@
       <height>28</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(162, 162, 162);</string>
+    </property>
     <property name="text">
      <string>Back</string>
     </property>
@@ -338,7 +446,6 @@
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <tabstops>
   <tabstop>control_point_1_x_line</tabstop>
@@ -352,7 +459,6 @@
   <tabstop>Set_control_points_btn</tabstop>
   <tabstop>Add_curve_btn</tabstop>
   <tabstop>Remove_curve_btn</tabstop>
-  <tabstop>Curve_opacity_box</tabstop>
   <tabstop>Left_line_btn</tabstop>
   <tabstop>Right_line_btn</tabstop>
   <tabstop>Above_line_btn</tabstop>
