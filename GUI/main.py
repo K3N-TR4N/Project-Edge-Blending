@@ -135,10 +135,7 @@ class GeometryEditingWindow(QMainWindow):
             
             for curve in self.bezier_curves:
                 self.axes.add_patch(self.bezier_curves[curve])
-            self.SendInfo()
-        
-
-        
+            self.SendInfo()        
 
         #####################################################################
 
@@ -248,6 +245,9 @@ class GeometryEditingWindow(QMainWindow):
         if self.Curve_box.currentText() in self.line_area_shapes.keys():
             self.axes.add_patch(self.line_area_shapes[self.Curve_box.currentText()])
 
+        self.axes.set_title(self.Client_projectors_box.currentText() + ' Mask')
+        self.axes.set_xlabel('Screen Width')
+        self.axes.set_ylabel('Screen Height')
         self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
         self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
         self.axes.grid(color = 'k')
@@ -285,6 +285,7 @@ class GeometryEditingWindow(QMainWindow):
             self.bezier_curves[self.Curve_box.currentText()] = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
 
             if self.Curve_box.currentText() in self.line_area_shapes:
+                del self.line_area_points[self.Curve_box.currentText()]
                 del self.line_area_shapes[self.Curve_box.currentText()]
 
             self.redrawCanvas()
@@ -381,6 +382,21 @@ class GeometryEditingWindow(QMainWindow):
     def evaluateLineCurve(self, line_name, new_control_points, opacity_alpha_value):
 
         if len(set(new_control_points)) == 2:
+            self.Client_projectors_box.setEnabled(False)
+            self.Curve_box.setEnabled(False)
+            self.Curve_opacity_box.setEnabled(False)
+
+            self.Back_btn.setEnabled(False)
+
+            self.control_point_1_x_line.setEnabled(False)
+            self.control_point_1_y_line.setEnabled(False)
+            self.control_point_2_x_line.setEnabled(False)
+            self.control_point_2_y_line.setEnabled(False)
+            self.control_point_3_x_line.setEnabled(False)
+            self.control_point_3_y_line.setEnabled(False)
+            self.control_point_4_x_line.setEnabled(False)
+            self.control_point_4_y_line.setEnabled(False)
+
             self.Add_curve_btn.setEnabled(False)
             self.Remove_curve_btn.setEnabled(False)
 
@@ -388,6 +404,16 @@ class GeometryEditingWindow(QMainWindow):
             self.Control_point_2_btn.setEnabled(False)
             self.Control_point_3_btn.setEnabled(False)
             self.Control_point_4_btn.setEnabled(False)
+
+            self.control_point_1_click_cursor_enable = False
+            self.control_point_2_click_cursor_enable = False
+            self.control_point_3_click_cursor_enable = False
+            self.control_point_4_click_cursor_enable = False
+
+            self.control_point_1_click_count_parity = 0
+            self.control_point_2_click_count_parity = 0
+            self.control_point_3_click_count_parity = 0
+            self.control_point_4_click_count_parity = 0
             
             self.Set_control_points_btn.setEnabled(False)
 
@@ -495,7 +521,7 @@ class GeometryEditingWindow(QMainWindow):
         self.SendInfo()
             
     def makeFillArea(self, control_points_line_area):
-                
+
             self.Left_line_btn.setEnabled(False)
             self.Right_line_btn.setEnabled(False)
             self.Above_line_btn.setEnabled(False)
@@ -505,6 +531,21 @@ class GeometryEditingWindow(QMainWindow):
             self.line_area_shapes[self.line_control_point_name] = PathPatch(Path(control_points_line_area, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), transform=self.axes.transData)
 
             self.redrawCanvas()
+
+            self.Client_projectors_box.setEnabled(True)
+            self.Curve_box.setEnabled(True)
+            self.Curve_opacity_box.setEnabled(True)
+
+            self.Back_btn.setEnabled(True)
+
+            self.control_point_1_x_line.setEnabled(True)
+            self.control_point_1_y_line.setEnabled(True)
+            self.control_point_2_x_line.setEnabled(True)
+            self.control_point_2_y_line.setEnabled(True)
+            self.control_point_3_x_line.setEnabled(True)
+            self.control_point_3_y_line.setEnabled(True)
+            self.control_point_4_x_line.setEnabled(True)
+            self.control_point_4_y_line.setEnabled(True)
 
             self.Add_curve_btn.setEnabled(True)
             self.Remove_curve_btn.setEnabled(True)
@@ -525,6 +566,8 @@ class GeometryEditingWindow(QMainWindow):
         else:
             
             removed_curve_number = int(str.split(self.Curve_box.currentText(), ' ')[1])
+            removed_curve_key_name = 'Curve ' + str(removed_curve_number)
+
             total_curves_before_removal = len(self.bezier_curves)
 
             if removed_curve_number < total_curves_before_removal:
@@ -534,43 +577,46 @@ class GeometryEditingWindow(QMainWindow):
                 while index <= total_curves_before_removal:
                     changed_curves.append('Curve ' + str(index))
                     index = index + 1
-            
-                for changed_curve in changed_curves:
-                    new_curve_number = int(str.split(changed_curve, ' ')[1]) - 1
-                    print("test0")
-                    self.control_points_list['Curve ' + str(new_curve_number)] = self.control_points_list[changed_curve]
-                    del self.control_points_list[changed_curve]
 
-                    self.bezier_curves['Curve ' + str(new_curve_number)] = self.bezier_curves[changed_curve]
-                    del self.bezier_curves[changed_curve]
-                    
-                    if changed_curve in self.line_area_shapes:
-                        self.line_area_shapes['Curve ' + str(new_curve_number)] = self.line_area_shapes[changed_curve]
-                        del self.line_area_shapes[changed_curve]
-                        print("test1")
-                    if changed_curve in self.line_area_points:
-                        self.line_area_shapes['Curve ' + str(new_curve_number)] = self.line_area_points[changed_curve]
-                        del self.line_area_points[changed_curve]
-                        print("test2")
+                if removed_curve_key_name in self.line_area_points and len(self.line_area_points) == 1:
+                    del self.control_points_list[removed_curve_key_name]
+                    del self.bezier_curves[removed_curve_key_name]
+                    del self.line_area_points[removed_curve_key_name]
+                    del self.line_area_shapes[removed_curve_key_name]
 
+                else:
+                    for changed_curve in changed_curves:
+                        new_curve_number = int(str.split(changed_curve, ' ')[1]) - 1
+
+                        self.control_points_list['Curve ' + str(new_curve_number)] = self.control_points_list[changed_curve]
+                        del self.control_points_list[changed_curve]
+
+                        self.bezier_curves['Curve ' + str(new_curve_number)] = self.bezier_curves[changed_curve]
+                        del self.bezier_curves[changed_curve]
+                        
+                        if changed_curve in self.line_area_points:
+                            self.line_area_points['Curve ' + str(new_curve_number)] = self.line_area_points[changed_curve]
+                            del self.line_area_points[changed_curve]
+
+                            self.line_area_shapes['Curve ' + str(new_curve_number)] = self.line_area_shapes[changed_curve]
+                            del self.line_area_shapes[changed_curve]
+                
                 self.Curve_box.clear()
                 self.Curve_box.addItems(list(self.bezier_curves.keys()))
 
             else:
                 del self.control_points_list[self.Curve_box.currentText()]
                 del self.bezier_curves[self.Curve_box.currentText()]
-        
-                if self.Curve_box.currentText() in self.line_area_shapes:
-                    del self.line_area_shapes[self.Curve_box.currentText()]
 
                 if self.Curve_box.currentText() in self.line_area_points:
                     del self.line_area_points[self.Curve_box.currentText()]
+                    del self.line_area_shapes[self.Curve_box.currentText()]
 
                 if not self.bezier_curves.keys():
                     self.Curve_box.addItem('No Curves')
 
                 self.Curve_box.removeItem(self.Curve_box.currentIndex())
-
+            
             self.redrawCanvas()
             self.SendInfo()
 
