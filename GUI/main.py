@@ -74,6 +74,9 @@ class GeometryEditingWindow(QMainWindow):
         self.control_point_3_click_count_parity = 0
         self.control_point_4_click_count_parity = 0
 
+        self.line_mode_click_count_parity = 0
+        self.line_mode_on = False
+
         self.contrast_curve_click_count_parity = 0
         self.contrast_curve = False
 
@@ -151,6 +154,13 @@ class GeometryEditingWindow(QMainWindow):
         self.Control_point_3_btn.clicked.connect(self.controlPoint3Clicked)
         self.Control_point_4_btn.clicked.connect(self.controlPoint4Clicked)
         self.Set_control_points_btn.clicked.connect(self.setControlPoints)
+
+        ##########################
+        self.Line_mode_btn.clicked.connect(self.lineModeClicked)
+        self.control_point_1_x_line.textChanged.connect(self.controlPoint1XChanged)
+        self.control_point_1_y_line.textChanged.connect(self.controlPoint1YChanged)
+
+        ##########################
 
         self.Left_line_btn.clicked.connect(self.fillLineAreaLeft)
         self.Right_line_btn.clicked.connect(self.fillLineAreaRight)
@@ -272,17 +282,21 @@ class GeometryEditingWindow(QMainWindow):
             else: 
                 return
             
-            user_control_point_values = [user_control_point_1_x, user_control_point_1_y, 
-                                            user_control_point_2_x, user_control_point_2_y, 
-                                            user_control_point_3_x, user_control_point_3_y, 
-                                            user_control_point_4_x, user_control_point_4_y]
+            user_control_point_values =  [(user_control_point_1_x, user_control_point_1_y), 
+                                          (user_control_point_2_x, user_control_point_2_y), 
+                                          (user_control_point_3_x, user_control_point_3_y), 
+                                          (user_control_point_4_x, user_control_point_4_y)]
 
-            if self.evaluateControlPoints(user_control_point_values = user_control_point_values) == 'Invalid':
+            curve_type = 'curve'
+
+            if len(set(user_control_point_values)) == 2:
+                curve_type = 'line'
+
+            if self.evaluateControlPoints(user_control_point_values = user_control_point_values, curve_type = curve_type) == 'Invalid':
                 return
-
-            new_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
-            self.control_points_list[self.Curve_box.currentText()] = [new_control_points, user_curve_opacity_alpha_value]
-            self.bezier_curves[self.Curve_box.currentText()] = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
+            
+            self.control_points_list[self.Curve_box.currentText()] = [user_control_point_values, user_curve_opacity_alpha_value]
+            self.bezier_curves[self.Curve_box.currentText()] = PathPatch(Path(user_control_point_values, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
 
             if self.Curve_box.currentText() in self.line_area_shapes:
                 del self.line_area_points[self.Curve_box.currentText()]
@@ -290,7 +304,9 @@ class GeometryEditingWindow(QMainWindow):
 
             self.redrawCanvas()
             
-            self.evaluateLineCurve(line_name = self.Curve_box.currentText(), new_control_points = new_control_points, opacity_alpha_value = user_curve_opacity_alpha_value)
+            if curve_type == 'line':
+                self.enableFillLineButtons(line_name = self.Curve_box.currentText(), new_control_points = user_control_point_values, opacity_alpha_value = user_curve_opacity_alpha_value)
+            
             self.SendInfo()
         
     def addNewCurveClicked(self):
@@ -309,20 +325,22 @@ class GeometryEditingWindow(QMainWindow):
         else: 
             return
         
-        user_control_point_values = [user_control_point_1_x, user_control_point_1_y, 
-                                        user_control_point_2_x, user_control_point_2_y, 
-                                        user_control_point_3_x, user_control_point_3_y, 
-                                        user_control_point_4_x, user_control_point_4_y]
+        user_control_point_values =  [(user_control_point_1_x, user_control_point_1_y), 
+                                      (user_control_point_2_x, user_control_point_2_y), 
+                                      (user_control_point_3_x, user_control_point_3_y),
+                                      (user_control_point_4_x, user_control_point_4_y)]
 
-        if self.evaluateControlPoints(user_control_point_values = user_control_point_values) == 'Invalid':
-            return
+        curve_type = 'curve'
 
-        new_control_points = [(user_control_point_1_x, user_control_point_1_y), (user_control_point_2_x, user_control_point_2_y), (user_control_point_3_x, user_control_point_3_y), (user_control_point_4_x, user_control_point_4_y)]
+        if len(set(user_control_point_values)) == 2:
+            curve_type = 'line'
+        
+        print('Valid points!')
 
-        new_bezier_curve = PathPatch(Path(new_control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
+        new_bezier_curve = PathPatch(Path(user_control_point_values, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
         
         new_bezier_curve_name = 'Curve ' + str(len(self.control_points_list) + 1)
-        self.control_points_list[new_bezier_curve_name] = [new_control_points, user_curve_opacity_alpha_value]
+        self.control_points_list[new_bezier_curve_name] = [user_control_point_values, user_curve_opacity_alpha_value]
         self.bezier_curves[new_bezier_curve_name] = new_bezier_curve
 
         self.Curve_box.addItem(new_bezier_curve_name)
@@ -334,7 +352,9 @@ class GeometryEditingWindow(QMainWindow):
         else:
             self.Curve_box.setCurrentText('Curve ' + str(len(self.control_points_list)))
 
-        self.evaluateLineCurve(line_name = new_bezier_curve_name, new_control_points = new_control_points, opacity_alpha_value = user_curve_opacity_alpha_value)
+        if curve_type == 'line':
+            self.enableFillLineButtons(line_name = self.Curve_box.currentText(), new_control_points = user_control_point_values, opacity_alpha_value = user_curve_opacity_alpha_value)
+
         self.SendInfo()
 
     def evaluateLineEditFields(self):
@@ -352,171 +372,315 @@ class GeometryEditingWindow(QMainWindow):
         return 'Valid'
 
     #   All four control points cannot have the same coordinate
-    #   Control Point 1 and Control 4 cannot be at the same point
-    #   Control Point 1 and Control 4 have to be on the boundary lines
-    def evaluateControlPoints(self, user_control_point_values):    
+    #   Control Points 1 and 4 cannot be at the same point if Control Points 2 and 3 are at the same point.
+    #   Control Points 1 and 4 have to be on the boundary lines for lines
+    def evaluateControlPoints(self, user_control_point_values, curve_type):  
+        print(user_control_point_values)
         if len(set(user_control_point_values)) == 1:
-            print('Invalid control points! All four control points cannot be on the same coordinate.')
-            return 'Invalid'
-        if user_control_point_values[0] == user_control_point_values[6] and user_control_point_values[1] == user_control_point_values[7]:
-            print('Invalid control points! Control point 1 and control point 4 cannot be the same if control point 2 and control point 3 are the same.')
-            return 'Invalid'
-        if user_control_point_values[0] < 0 or user_control_point_values[0] > self.window_width or user_control_point_values[1] < 0 or user_control_point_values[1] > self.window_height:
-            print('Invalid control points! Control point 1 must be on the blue dashed lines.')
-            return 'Invalid'
-        else:
-            if user_control_point_values[1] != 0 and user_control_point_values[1] != self.window_height and user_control_point_values[0] != 0 and user_control_point_values[0] != self.window_width:
-                print('Invalid control points! Control point 1 must be on the blue dashed lines.')
-                return 'Invalid'
-
-        if user_control_point_values[6] < 0 or user_control_point_values[6] > self.window_width or user_control_point_values[7] < 0 or user_control_point_values[7] > self.window_height:
-            print('Invalid control points! Control point 4 must be on the blue dashed lines.')
-            return 'Invalid'
-        else:
-            if user_control_point_values[7] != 0 and user_control_point_values[7] != self.window_height and user_control_point_values[6] != 0 and user_control_point_values[6] != self.window_width:
-                print('Invalid control points! Control point 4 must be on the blue dashed lines.')
+                print('Invalid control points! All four control points cannot be on the same coordinate.')
+                return 'Invalid'  
+        
+        if curve_type == 'curve':
+            if user_control_point_values[0][0] == user_control_point_values[3][0] and user_control_point_values[0][1] == user_control_point_values[3][1]:
+                if user_control_point_values[1][0] == user_control_point_values[2][0] and user_control_point_values[1][1] == user_control_point_values[2][1]:
+                    print('Invalid control points! Control point 1 and control point 4 cannot be the same if control point 2 and control point 3 are the same.')
+                    return 'Invalid'
+            else:         
+                return 'Valid'
+        else:    
+            
+            if (not (user_control_point_values[0][0] < 0 or user_control_point_values[0][0] > self.window_width or user_control_point_values[0][1] < 0 or user_control_point_values[0][1] > self.window_height)
+                and not (user_control_point_values[3][0] < 0 or user_control_point_values[3][0] > self.window_width or user_control_point_values[3][1] < 0 or user_control_point_values[3][1] > self.window_height)):
+                #print('Control Points 1 and 4 are within blue dashed lines!')
+                #return 'Valid'
+                if ((user_control_point_values[0][0] != 0 and user_control_point_values[0][0] != self.window_width and user_control_point_values[0][1] != 0 and user_control_point_values[0][1] != self.window_height)
+                    and (user_control_point_values[3][0] != 0 and user_control_point_values[3][0] != self.window_width and user_control_point_values[3][1] != 0 and user_control_point_values[3][1] != self.window_height)):
+                    print('Neither Control Points 1 or 4 are on the blue dashed lines!')
+                    return 'Invalid'
+                else:
+                    #print('Either Control Points 1 or 4 are on the blue dashed lines!')
+                    return 'Valid'
+            else:
+                print('Control Points 1 and 4 are NOT within blue dashed lines!')
                 return 'Invalid'
         
-        return 'Valid'
-    
-    def evaluateLineCurve(self, line_name, new_control_points, opacity_alpha_value):
+    def enableFillLineButtons(self, line_name, new_control_points, opacity_alpha_value):
 
-        if len(set(new_control_points)) == 2:
-            self.Client_projectors_box.setEnabled(False)
-            self.Curve_box.setEnabled(False)
-            self.Curve_opacity_box.setEnabled(False)
+        self.Client_projectors_box.setEnabled(False)
+        self.Curve_box.setEnabled(False)
+        self.Curve_opacity_box.setEnabled(False)
 
-            self.Back_btn.setEnabled(False)
+        self.Back_btn.setEnabled(False)
 
-            self.control_point_1_x_line.setEnabled(False)
-            self.control_point_1_y_line.setEnabled(False)
-            self.control_point_2_x_line.setEnabled(False)
-            self.control_point_2_y_line.setEnabled(False)
-            self.control_point_3_x_line.setEnabled(False)
-            self.control_point_3_y_line.setEnabled(False)
-            self.control_point_4_x_line.setEnabled(False)
-            self.control_point_4_y_line.setEnabled(False)
+        self.control_point_1_x_line.setEnabled(False)
+        self.control_point_1_y_line.setEnabled(False)
+        self.control_point_2_x_line.setEnabled(False)
+        self.control_point_2_y_line.setEnabled(False)
+        self.control_point_3_x_line.setEnabled(False)
+        self.control_point_3_y_line.setEnabled(False)
+        self.control_point_4_x_line.setEnabled(False)
+        self.control_point_4_y_line.setEnabled(False)
 
-            self.Add_curve_btn.setEnabled(False)
-            self.Remove_curve_btn.setEnabled(False)
+        self.Add_curve_btn.setEnabled(False)
+        self.Remove_curve_btn.setEnabled(False)
 
-            self.Control_point_1_btn.setEnabled(False)
-            self.Control_point_2_btn.setEnabled(False)
-            self.Control_point_3_btn.setEnabled(False)
-            self.Control_point_4_btn.setEnabled(False)
+        self.Control_point_1_btn.setEnabled(False)
+        self.Control_point_2_btn.setEnabled(False)
+        self.Control_point_3_btn.setEnabled(False)
+        self.Control_point_4_btn.setEnabled(False)
 
-            self.control_point_1_click_cursor_enable = False
-            self.control_point_2_click_cursor_enable = False
-            self.control_point_3_click_cursor_enable = False
-            self.control_point_4_click_cursor_enable = False
+        self.control_point_1_click_cursor_enable = False
+        self.control_point_2_click_cursor_enable = False
+        self.control_point_3_click_cursor_enable = False
+        self.control_point_4_click_cursor_enable = False
 
-            self.control_point_1_click_count_parity = 0
-            self.control_point_2_click_count_parity = 0
-            self.control_point_3_click_count_parity = 0
-            self.control_point_4_click_count_parity = 0
-            
-            self.Set_control_points_btn.setEnabled(False)
+        self.control_point_1_click_count_parity = 0
+        self.control_point_2_click_count_parity = 0
+        self.control_point_3_click_count_parity = 0
+        self.control_point_4_click_count_parity = 0
 
-            self.Curve_box.setEnabled(False)
+        self.Line_mode_btn.setEnabled(False)
+        self.line_mode_on = False
+        self.line_mode_click_count_parity = 0
+        
+        self.Set_control_points_btn.setEnabled(False)
 
-            self.line_control_point_name = line_name
-            self.line_control_point_1 = new_control_points[0]
-            self.line_control_point_4 = new_control_points[3]
+        self.Curve_box.setEnabled(False)
 
-            self.line_opacity_alpha_value = opacity_alpha_value
+        self.line_control_point_name = line_name
+        self.line_control_point_1 = new_control_points[0]
+        self.line_control_point_4 = new_control_points[3]
 
-            if self.line_control_point_1[1] == self.line_control_point_4[1]:
+        self.line_opacity_alpha_value = opacity_alpha_value
 
-                if (self.line_control_point_1[0] == 0.0 and self.line_control_point_4[0] == self.window_width) or (self.line_control_point_1[0] == self.window_width and self.line_control_point_4[0] == 0):
-                    self.Left_line_btn.setEnabled(False)
-                    self.Right_line_btn.setEnabled(False)
-                    self.Above_line_btn.setEnabled(True)
-                    self.Below_line_btn.setEnabled(True)
-                else:
-                    print('Invalid control points! For horizontal lines, control points 1 and 4 must be on the ends of the projection screen.')
-                    
-                    self.Add_curve_btn.setEnabled(True)
-                    self.Remove_curve_btn.setEnabled(True)
+        if self.line_control_point_1[1] == self.line_control_point_4[1]:
+            self.Left_line_btn.setEnabled(False)
+            self.Right_line_btn.setEnabled(False)
+            self.Above_line_btn.setEnabled(True)
+            self.Below_line_btn.setEnabled(True)
 
-                    self.Control_point_1_btn.setEnabled(True)
-                    self.Control_point_2_btn.setEnabled(True)
-                    self.Control_point_3_btn.setEnabled(True)
-                    self.Control_point_4_btn.setEnabled(True)
-
-                    self.Set_control_points_btn.setEnabled(True)
-
-                    self.Curve_box.setEnabled(True)
-                    
-                    return
-            
-            else:
-                self.Left_line_btn.setEnabled(True)
-                self.Right_line_btn.setEnabled(True)
-                self.Above_line_btn.setEnabled(False)
-                self.Below_line_btn.setEnabled(False)
-
+        elif self.line_control_point_1[0] == self.line_control_point_4[0]:
+            self.Left_line_btn.setEnabled(True)
+            self.Right_line_btn.setEnabled(True)
+            self.Above_line_btn.setEnabled(False)
+            self.Below_line_btn.setEnabled(False)
+        
+        else:
+            self.Left_line_btn.setEnabled(True)
+            self.Right_line_btn.setEnabled(True)
+            self.Above_line_btn.setEnabled(True)
+            self.Below_line_btn.setEnabled(True)
     
     def fillLineAreaLeft(self):
-        if self.line_control_point_1[1] == 0:                
-            control_points_line_area = [(0.0, float(self.window_height)), 
-                                        (0.0, 0.0), 
+        if self.line_control_point_1[1] == 0:  
+            control_points_line_area = [(0.0, 0.0), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (0.0, self.line_control_point_4[1]), 
+                                        (0.0, 0.0)]                                        
+        elif self.line_control_point_4[1] == 0:
+            control_points_line_area = [(0.0, 0.0), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (0.0, self.line_control_point_1[1]), 
+                                        (0.0, 0.0)]
+        elif self.line_control_point_1[1] == float(self.window_height):
+            control_points_line_area = [(0.0, float(self.window_height)), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (0.0, self.line_control_point_4[1]), 
                                         (0.0, float(self.window_height))]
+        elif self.line_control_point_4[1] == float(self.window_height):
+            control_points_line_area = [(0.0, float(self.window_height)), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (0.0, self.line_control_point_1[1]), 
+                                        (0.0, float(self.window_height))]
+        elif self.line_control_point_1[0] == 0:
+            control_points_line_area = [(self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (0.0, self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1])]
+        elif self.line_control_point_4[0] == 0:
+            control_points_line_area = [(self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (0.0, self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1])]
+        elif self.line_control_point_1[0] == float(self.window_width):
+            control_points_line_area = [(0.0, self.line_control_point_1[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (0.0, self.line_control_point_4[1]), 
+                                        (0.0, self.line_control_point_1[1])]
         else:
-            control_points_line_area = [(0.0, float(self.window_height)), 
-                                        (0.0, 0.0), 
-                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+            control_points_line_area = [(0.0, self.line_control_point_4[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
-                                        (0.0, float(self.window_height))]
+                                        (0.0, self.line_control_point_1[1]), 
+                                        (0.0, self.line_control_point_4[1])]
+        
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
             
     def fillLineAreaRight(self):
         if self.line_control_point_1[1] == 0:
-            control_points_line_area = [(float(self.window_width), float(self.window_height)), 
-                                        (float(self.window_width), 0.0), 
+            control_points_line_area = [(float(self.window_width), 0.0),  
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (float(self.window_width), self.line_control_point_4[1]),
+                                        (float(self.window_width), 0.0)]   
+        elif self.line_control_point_4[1] == 0: 
+            control_points_line_area = [(float(self.window_width), 0.0),  
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (float(self.window_width), self.line_control_point_1[1]),
+                                        (float(self.window_width), 0.0)]      
+        elif self.line_control_point_1[1] == float(self.window_height):
+            control_points_line_area = [(float(self.window_width), float(self.window_height)), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (float(self.window_width), self.line_control_point_4[1]), 
                                         (float(self.window_width), float(self.window_height))]
+        elif self.line_control_point_4[1] == float(self.window_height):
+            control_points_line_area = [(float(self.window_width), float(self.window_height)),  
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (float(self.window_width), self.line_control_point_1[1]),
+                                        (float(self.window_width), float(self.window_height))]     
+        elif self.line_control_point_1[0] == float(self.window_width):
+            control_points_line_area = [(self.line_control_point_1[0], self.line_control_point_1[1]),  
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (float(self.window_width), self.line_control_point_4[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1])]  
+        elif self.line_control_point_4[0] == float(self.window_width):
+            control_points_line_area = [(self.line_control_point_4[0], self.line_control_point_4[1]),  
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (float(self.window_width), self.line_control_point_1[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1])]
+        elif self.line_control_point_1[0] == 0.0:
+            control_points_line_area = [(float(self.window_width), self.line_control_point_1[1]),  
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (float(self.window_width), self.line_control_point_4[1]),
+                                        (float(self.window_width), self.line_control_point_1[1])]  
         else:
-            control_points_line_area = [(float(self.window_width), float(self.window_height)), 
-                                        (float(self.window_width), 0.0), 
+            control_points_line_area = [(float(self.window_width), self.line_control_point_4[1]),  
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
-                                        (float(self.window_width), float(self.window_height))]
+                                        (float(self.window_width), self.line_control_point_1[1]),
+                                        (float(self.window_width), self.line_control_point_4[1])] 
+            
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
 
     def fillLineAreaAbove(self):
-        if self.line_control_point_1[0] == 0:
+        if self.line_control_point_1[0] == 0.0:
             control_points_line_area = [(0.0, float(self.window_height)), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
-                                        (float(self.window_width), float(self.window_height)),
+                                        (self.line_control_point_4[0], float(self.window_height)),
                                         (0.0, float(self.window_height))]
+            
+        elif self.line_control_point_4[0] == 0.0:
+            control_points_line_area = [(0.0, float(self.window_height)), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_1[0], float(self.window_height)),
+                                        (0.0, float(self.window_height))]
+        elif self.line_control_point_1[0] == float(self.window_width):
+            control_points_line_area = [(float(self.window_width), float(self.window_height)), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_4[0], float(self.window_height)),
+                                        (float(self.window_width), float(self.window_height))]
+        elif self.line_control_point_4[0] == float(self.window_width):
+            control_points_line_area = [(float(self.window_width), float(self.window_height)), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_1[0], float(self.window_height)),
+                                        (float(self.window_width), float(self.window_height))]
+        elif self.line_control_point_1[1] == 0.0:
+            control_points_line_area = [(self.line_control_point_1[0], float(self.window_height)),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_4[0], float(self.window_height)),
+                                        (self.line_control_point_1[0], float(self.window_height))]
+        elif self.line_control_point_4[1] == 0.0:
+            control_points_line_area = [(self.line_control_point_4[0], float(self.window_height)),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_1[0], float(self.window_height)),
+                                        (self.line_control_point_4[0], float(self.window_height))]
+        elif self.line_control_point_1[1] == float(self.window_height):
+            control_points_line_area = [(self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_4[0], float(self.window_height)),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1])]
         else:
-            control_points_line_area = [(0.0, float(self.window_height)), 
-                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
-                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
-                                        (float(self.window_width), float(self.window_height)),
-                                        (0.0, float(self.window_height))]
+            control_points_line_area = [(self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_1[0], float(self.window_height)),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1])]
+
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
 
     def fillLineAreaBelow(self):
-        if self.line_control_point_1[0] == 0:
+        if self.line_control_point_1[0] == 0.0:
             control_points_line_area = [(0.0, 0.0), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
-                                        (float(self.window_width), 0.0),
+                                        (self.line_control_point_4[0], 0.0),
                                         (0.0, 0.0)]
+        elif self.line_control_point_4[0] == 0.0:
+            control_points_line_area = [(0.0, 0.0), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_1[0], 0.0),
+                                        (0.0, 0.0)]
+        elif self.line_control_point_1[0] == float(self.window_width):
+            control_points_line_area = [(float(self.window_width), 0.0), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_4[0], 0.0),
+                                        (float(self.window_width), 0.0)]
+        elif self.line_control_point_4[0] == float(self.window_width):
+            control_points_line_area = [(float(self.window_width), 0.0), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_1[0], 0.0),
+                                        (float(self.window_width), 0.0)]
+        elif self.line_control_point_1[1] == float(self.window_height):
+            control_points_line_area = [(self.line_control_point_1[0], 0.0), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_4[0], 0.0),
+                                        (self.line_control_point_1[0], 0.0)]
+        elif self.line_control_point_4[1] == float(self.window_height):
+            control_points_line_area = [(self.line_control_point_4[0], 0.0), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_1[0], 0.0),
+                                        (self.line_control_point_4[0], 0.0)]
+        elif self.line_control_point_1[1] == 0.0:
+            control_points_line_area = [(self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_4[0], 0.0),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1])]
         else:
-            control_points_line_area = [(0.0, 0.0), 
-                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
-                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
-                                        (float(self.window_width), 0.0),
-                                        (0.0, 0.0)]
+            control_points_line_area = [(self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_1[0], 0.0),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1])]      
+        
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
             
@@ -546,6 +710,8 @@ class GeometryEditingWindow(QMainWindow):
             self.control_point_3_y_line.setEnabled(True)
             self.control_point_4_x_line.setEnabled(True)
             self.control_point_4_y_line.setEnabled(True)
+
+            self.Line_mode_btn.setEnabled(True)
 
             self.Add_curve_btn.setEnabled(True)
             self.Remove_curve_btn.setEnabled(True)
@@ -620,7 +786,6 @@ class GeometryEditingWindow(QMainWindow):
             self.redrawCanvas()
             self.SendInfo()
 
-
     def selectedCurveChanged(self):
         
         if self.Curve_box.currentText() == 'No Curves' or self.Curve_box.currentText() == '':
@@ -641,7 +806,6 @@ class GeometryEditingWindow(QMainWindow):
             self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
 
             self.redrawCanvas()        
-
 
     def controlPoint1Clicked(self):
         
@@ -713,7 +877,7 @@ class GeometryEditingWindow(QMainWindow):
 
         if self.contrast_curve_click_count_parity % 2 == 0:
             self.contrast_curve = False
-            self.contrast_curve_click_count_parity =0
+            self.contrast_curve_click_count_parity = 0
         else:
             self.contrast_curve = True
 
@@ -767,7 +931,7 @@ class GeometryEditingWindow(QMainWindow):
             elif abs(cursor_x - self.window_width) <= 10.0 and abs(cursor_y - self.window_height) <= 10.0:
                 x_line_edit.setText(str(self.window_width))
                 y_line_edit.setText(str(self.window_height))
-            elif x_line_edit == self.control_point_2_x_line or x_line_edit == self.control_point_3_x_line:
+            else:
                 x_line_edit.setText(str(round(cursor_x, 2)))
                 y_line_edit.setText(str(round(cursor_y, 2)))
 
@@ -789,6 +953,55 @@ class GeometryEditingWindow(QMainWindow):
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_4_x_line, self.control_point_4_y_line)
                 self.setControlPoints()
 
+
+    ###############################
+    def lineModeClicked(self):
+
+        if self.control_point_1_click_cursor_enable == True or self.control_point_4_click_cursor_enable == True:
+            return
+        
+        self.line_mode_click_count_parity = self.line_mode_click_count_parity + 1
+
+        if self.line_mode_click_count_parity % 2 == 0:
+            self.Control_point_2_btn.setEnabled(True)
+            self.control_point_2_x_line.setEnabled(True)
+            self.control_point_2_y_line.setEnabled(True)
+
+            self.Control_point_3_btn.setEnabled(True)
+            self.control_point_3_x_line.setEnabled(True)
+            self.control_point_3_y_line.setEnabled(True)
+
+            self.line_mode_on = False
+            self.line_mode_click_count_parity = 0
+        
+        else:
+            self.Control_point_2_btn.setEnabled(False)
+            self.control_point_2_x_line.setEnabled(False)
+            self.control_point_2_y_line.setEnabled(False)
+
+            self.control_point_2_x_line.setText(self.control_point_1_x_line.text())
+            self.control_point_2_y_line.setText(self.control_point_1_y_line.text())
+
+            self.Control_point_3_btn.setEnabled(False)
+            self.control_point_3_x_line.setEnabled(False)
+            self.control_point_3_y_line.setEnabled(False)
+
+            self.control_point_3_x_line.setText(self.control_point_1_x_line.text())
+            self.control_point_3_y_line.setText(self.control_point_1_y_line.text())
+
+            self.line_mode_on = True
+
+    def controlPoint1XChanged(self):
+        if self.line_mode_on == True:
+            self.control_point_2_x_line.setText(self.control_point_1_x_line.text())
+            self.control_point_3_x_line.setText(self.control_point_1_x_line.text())
+    
+    def controlPoint1YChanged(self):
+        if self.line_mode_on == True:
+            self.control_point_2_y_line.setText(self.control_point_1_y_line.text())
+            self.control_point_3_y_line.setText(self.control_point_1_y_line.text())
+
+    ##########################################################################################
 
     ## Client combo box text changed signal
     #
