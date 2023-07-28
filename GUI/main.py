@@ -23,14 +23,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         loadUi("MainWindow.ui", self)
-        self.MaskFeed_btn.clicked.connect(self.gotoMaskFeedWindow)
         self.GeometryEdit_btn.clicked.connect(self.gotoGeometryEditingWindow)
         self.ProjectorConfig_btn.clicked.connect(self.gotoProjectorConfigurationWindow)
-
-    def gotoMaskFeedWindow(self):
-        maskFeed = MaskFeedWindow()
-        widget.addWidget(maskFeed)
-        widget.setCurrentIndex(widget.currentIndex() + 1)
 
     def gotoGeometryEditingWindow(self):
         geometryEdit = GeometryEditingWindow()
@@ -40,17 +34,6 @@ class MainWindow(QMainWindow):
     def gotoProjectorConfigurationWindow(self):
         projectorConfig = ProjectorConfigurationWindow()
         widget.addWidget(projectorConfig)
-        widget.setCurrentIndex(widget.currentIndex() + 1)
-
-class MaskFeedWindow(QMainWindow):
-    def __init__(self):
-        super(MaskFeedWindow, self).__init__()
-        loadUi("MaskFeedWindow.ui", self)
-        self.Back_btn.clicked.connect(self.gotoMainWindow)
-
-    def gotoMainWindow(self):
-        mainWindow = MainWindow()
-        widget.addWidget(mainWindow)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
 class GeometryEditingWindow(QMainWindow):
@@ -154,13 +137,10 @@ class GeometryEditingWindow(QMainWindow):
         self.Control_point_3_btn.clicked.connect(self.controlPoint3Clicked)
         self.Control_point_4_btn.clicked.connect(self.controlPoint4Clicked)
         self.Set_control_points_btn.clicked.connect(self.setControlPoints)
-
-        ##########################
+        
         self.Line_mode_btn.clicked.connect(self.lineModeClicked)
         self.control_point_1_x_line.textChanged.connect(self.controlPoint1XChanged)
         self.control_point_1_y_line.textChanged.connect(self.controlPoint1YChanged)
-
-        ##########################
 
         self.Left_line_btn.clicked.connect(self.fillLineAreaLeft)
         self.Right_line_btn.clicked.connect(self.fillLineAreaRight)
@@ -334,8 +314,6 @@ class GeometryEditingWindow(QMainWindow):
 
         if len(set(user_control_point_values)) == 2:
             curve_type = 'line'
-        
-        print('Valid points!')
 
         new_bezier_curve = PathPatch(Path(user_control_point_values, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
         
@@ -349,6 +327,9 @@ class GeometryEditingWindow(QMainWindow):
 
         if self.Curve_box.currentText() == 'No Curves':
             self.Curve_box.removeItem(self.Curve_box.currentIndex())
+            
+            self.Set_control_points_btn.setEnabled(True)
+            self.Remove_curve_btn.setEnabled(True)
         else:
             self.Curve_box.setCurrentText('Curve ' + str(len(self.control_points_list)))
 
@@ -373,9 +354,8 @@ class GeometryEditingWindow(QMainWindow):
 
     #   All four control points cannot have the same coordinate
     #   Control Points 1 and 4 cannot be at the same point if Control Points 2 and 3 are at the same point.
-    #   Control Points 1 and 4 have to be on the boundary lines for lines
+    #   Either Control Points 1 or 4 have to be on the boundary lines for lines
     def evaluateControlPoints(self, user_control_point_values, curve_type):  
-        print(user_control_point_values)
         if len(set(user_control_point_values)) == 1:
                 print('Invalid control points! All four control points cannot be on the same coordinate.')
                 return 'Invalid'  
@@ -388,20 +368,17 @@ class GeometryEditingWindow(QMainWindow):
             else:         
                 return 'Valid'
         else:    
-            
+            # Control Points 1 and 4 are within blue dashed lines
             if (not (user_control_point_values[0][0] < 0 or user_control_point_values[0][0] > self.window_width or user_control_point_values[0][1] < 0 or user_control_point_values[0][1] > self.window_height)
                 and not (user_control_point_values[3][0] < 0 or user_control_point_values[3][0] > self.window_width or user_control_point_values[3][1] < 0 or user_control_point_values[3][1] > self.window_height)):
-                #print('Control Points 1 and 4 are within blue dashed lines!')
-                #return 'Valid'
                 if ((user_control_point_values[0][0] != 0 and user_control_point_values[0][0] != self.window_width and user_control_point_values[0][1] != 0 and user_control_point_values[0][1] != self.window_height)
                     and (user_control_point_values[3][0] != 0 and user_control_point_values[3][0] != self.window_width and user_control_point_values[3][1] != 0 and user_control_point_values[3][1] != self.window_height)):
                     print('Neither Control Points 1 or 4 are on the blue dashed lines!')
                     return 'Invalid'
                 else:
-                    #print('Either Control Points 1 or 4 are on the blue dashed lines!')
                     return 'Valid'
             else:
-                print('Control Points 1 and 4 are NOT within blue dashed lines!')
+                print('Control Points 1 or 4 are NOT within blue dashed lines!')
                 return 'Invalid'
         
     def enableFillLineButtons(self, line_name, new_control_points, opacity_alpha_value):
@@ -744,7 +721,7 @@ class GeometryEditingWindow(QMainWindow):
                     changed_curves.append('Curve ' + str(index))
                     index = index + 1
 
-                if removed_curve_key_name in self.line_area_points and len(self.line_area_points) == 1:
+                if removed_curve_key_name in self.line_area_points and len(self.line_area_points) == 1 and len(self.control_points_list) == 1:
                     del self.control_points_list[removed_curve_key_name]
                     del self.bezier_curves[removed_curve_key_name]
                     del self.line_area_points[removed_curve_key_name]
@@ -754,6 +731,13 @@ class GeometryEditingWindow(QMainWindow):
                     for changed_curve in changed_curves:
                         new_curve_number = int(str.split(changed_curve, ' ')[1]) - 1
 
+                        if new_curve_number == removed_curve_number:
+                            if removed_curve_key_name in self.line_area_points:
+                                del self.control_points_list[removed_curve_key_name]
+                                del self.bezier_curves[removed_curve_key_name]
+                                del self.line_area_points[removed_curve_key_name]
+                                del self.line_area_shapes[removed_curve_key_name]
+                        
                         self.control_points_list['Curve ' + str(new_curve_number)] = self.control_points_list[changed_curve]
                         del self.control_points_list[changed_curve]
 
@@ -780,6 +764,9 @@ class GeometryEditingWindow(QMainWindow):
 
                 if not self.bezier_curves.keys():
                     self.Curve_box.addItem('No Curves')
+
+                    self.Set_control_points_btn.setEnabled(False)
+                    self.Remove_curve_btn.setEnabled(False)
 
                 self.Curve_box.removeItem(self.Curve_box.currentIndex())
             
@@ -953,8 +940,6 @@ class GeometryEditingWindow(QMainWindow):
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_4_x_line, self.control_point_4_y_line)
                 self.setControlPoints()
 
-
-    ###############################
     def lineModeClicked(self):
 
         if self.control_point_1_click_cursor_enable == True or self.control_point_4_click_cursor_enable == True:
@@ -1000,8 +985,6 @@ class GeometryEditingWindow(QMainWindow):
         if self.line_mode_on == True:
             self.control_point_2_y_line.setText(self.control_point_1_y_line.text())
             self.control_point_3_y_line.setText(self.control_point_1_y_line.text())
-
-    ##########################################################################################
 
     ## Client combo box text changed signal
     #
