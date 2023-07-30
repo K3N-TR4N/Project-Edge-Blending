@@ -87,41 +87,57 @@ class GeometryEditingWindow(QMainWindow):
 
         plt.connect('button_press_event', self.leftMouseClicked)
         self.horizontalLayout_1.addWidget(self.canvas)
-
-        self.GetInfo()
-        if (self.control_points_list or self.line_area_points):
-            for pointName, pointValue in self.control_points_list.items():
-                self.bezier_curves[pointName] = PathPatch(Path(pointValue[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
-        
-            for curve in self.bezier_curves:
-                self.axes.add_patch(self.bezier_curves[curve])
-
-            for lineName, lineValue in self.line_area_points.items():
-                self.line_area_shapes[lineName] = PathPatch(Path(lineValue[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'none', transform=self.axes.transData)
-
-            for line in self.line_area_shapes:
-                self.axes.add_patch(self.line_area_shapes[line])
-
-            selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
-            self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
-
-        else:
-            control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
-            control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
-            control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
-        
-            initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
-
-            self.index = 0
-
-            for control_points in initial_sets_of_control_points:
-                self.index = self.index + 1
-                self.control_points_list['Curve ' + str(self.index)] = [control_points, 1.0]
-                self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+        try:
+            self.GetInfo()
+            if (self.control_points_list or self.line_area_points):
+                for pointName, pointValue in self.control_points_list.items():
+                    self.bezier_curves[pointName] = PathPatch(Path(pointValue[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
             
-            for curve in self.bezier_curves:
-                self.axes.add_patch(self.bezier_curves[curve])
-            self.SendInfo()        
+                for curve in self.bezier_curves:
+                    self.axes.add_patch(self.bezier_curves[curve])
+
+                for lineName, lineValue in self.line_area_points.items():
+                    self.line_area_shapes[lineName] = PathPatch(Path(lineValue[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'none', transform=self.axes.transData)
+
+                for line in self.line_area_shapes:
+                    self.axes.add_patch(self.line_area_shapes[line])
+
+                selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
+                self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
+
+            else:
+                control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
+                control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+                control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+            
+                initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
+
+                self.index = 0
+
+                for control_points in initial_sets_of_control_points:
+                    self.index = self.index + 1
+                    self.control_points_list['Curve ' + str(self.index)] = [control_points, 1.0]
+                    self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+                
+                for curve in self.bezier_curves:
+                    self.axes.add_patch(self.bezier_curves[curve])
+                self.SendInfo()      
+        except:
+            self.Line_mode_btn.setEnabled(False)
+            self.Control_point_1_btn.setEnabled(False)
+            self.Control_point_2_btn.setEnabled(False)
+            self.Control_point_3_btn.setEnabled(False)
+            self.Control_point_4_btn.setEnabled(False)
+            self.Set_control_points_btn.setEnabled(False)
+            self.Add_curve_btn.setEnabled(False)
+            self.Remove_curve_btn.setEnabled(False)
+            self.Show_contrast_curve_btn.setEnabled(False)
+            self.Show_areas_btn.setEnabled(False)
+            self.Show_control_points_btn.setEnabled(False)
+            errorBox = QMessageBox()
+            errorBox.setText("Client at IP Address not found. Are you sure the client application is running on it?")
+            errorBox.exec()
+          
 
         #####################################################################
 
@@ -990,46 +1006,77 @@ class GeometryEditingWindow(QMainWindow):
     #
     # Checks whether the client combo box was changed and updates the bezier info from that particular client
     def clientComboBoxChanged(self):
-        self.GetInfo()
         self.axes.clear()
         self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
-        
         self.bezier_curves.clear()
         self.line_area_shapes.clear()
-        if(self.control_points_list or self.line_area_points):
-            for pointName, pointValue in self.control_points_list.items():
-                self.bezier_curves[pointName] = PathPatch(Path(pointValue[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
-        
-            for curve in self.bezier_curves:
-                self.axes.add_patch(self.bezier_curves[curve])
-
-            for lineName, lineValue in self.line_area_points.items():
-                self.line_area_shapes[lineName] = PathPatch(Path(lineValue[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'none', transform=self.axes.transData)
-
-            for line in self.line_area_shapes:
-                self.axes.add_patch(self.line_area_shapes[line])
-
-            selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
-            self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
-
-        else:
-            control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
-            control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
-            control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
-            print ("test")
-            initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
-
-            self.index = 0
-
-            for control_points in initial_sets_of_control_points:
-                self.index = self.index + 1
-                self.control_points_list['Curve ' + str(self.index)] = [control_points, 1.0]
-                self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+        self.line_mode_on = False
+        self.line_mode_click_count_parity = 0
+        try:
+            self.GetInfo()
+            self.Line_mode_btn.setEnabled(True)
+            self.Control_point_1_btn.setEnabled(True)
+            self.Control_point_2_btn.setEnabled(True)
+            self.Control_point_3_btn.setEnabled(True)
+            self.Control_point_4_btn.setEnabled(True)
+            self.Set_control_points_btn.setEnabled(True)
+            self.Add_curve_btn.setEnabled(True)
+            self.Remove_curve_btn.setEnabled(True)
+            self.Show_contrast_curve_btn.setEnabled(True)
+            self.Show_areas_btn.setEnabled(True)
+            self.Show_control_points_btn.setEnabled(True)
+            if(self.control_points_list or self.line_area_points):
+                for pointName, pointValue in self.control_points_list.items():
+                    self.bezier_curves[pointName] = PathPatch(Path(pointValue[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
             
-            for curve in self.bezier_curves:
-                self.axes.add_patch(self.bezier_curves[curve])
+                for curve in self.bezier_curves:
+                    self.axes.add_patch(self.bezier_curves[curve])
 
-            self.SendInfo()
+                for lineName, lineValue in self.line_area_points.items():
+                    self.line_area_shapes[lineName] = PathPatch(Path(lineValue[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = 'none', transform=self.axes.transData)
+
+                for line in self.line_area_shapes:
+                    self.axes.add_patch(self.line_area_shapes[line])
+
+                selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
+                self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
+
+            else:
+                control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
+                control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+                control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
+                print ("test")
+                initial_sets_of_control_points = [control_points_1, control_points_2, control_points_3]
+
+                self.index = 0
+
+                for control_points in initial_sets_of_control_points:
+                    self.index = self.index + 1
+                    self.control_points_list['Curve ' + str(self.index)] = [control_points, 1.0]
+                    self.bezier_curves['Curve ' + str(self.index)] = PathPatch(Path(control_points, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
+                
+                for curve in self.bezier_curves:
+                    self.axes.add_patch(self.bezier_curves[curve])
+
+                self.SendInfo()
+        except:
+            self.Line_mode_btn.setEnabled(False)
+            self.Control_point_1_btn.setEnabled(False)
+            self.Control_point_2_btn.setEnabled(False)
+            self.Control_point_3_btn.setEnabled(False)
+            self.Control_point_4_btn.setEnabled(False)
+            self.Set_control_points_btn.setEnabled(False)
+            self.Add_curve_btn.setEnabled(False)
+            self.Remove_curve_btn.setEnabled(False)
+            self.Show_contrast_curve_btn.setEnabled(False)
+            self.Show_areas_btn.setEnabled(False)
+            self.Show_control_points_btn.setEnabled(False)
+            
+            errorBox = QMessageBox()
+            errorBox.setText("Client at IP Address not found. Are you sure the client application is running on it?")
+            errorBox.exec()
+        
+        
 
         self.setTextBoxes()    
         self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
@@ -1055,7 +1102,7 @@ class GeometryEditingWindow(QMainWindow):
         ## QTcpSocket variable representing the host side connection with the client.
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
-        self.tcpSocket.waitForConnected(5000)
+        self.tcpSocket.waitForConnected(2000)
 
         ## Variable containing information to indicate that the client should send information back
         toSend = "send"
@@ -1167,9 +1214,9 @@ class ProjectorConfigurationWindow(QMainWindow):
     #
     def addClient(self):
         # If either the name or IP are blank you are disallowed from adding it.
-        if self.Add_name.toPlainText() != "" and self.Add_IP.toPlainText() != "":
+        if self.Add_name.text() != "" and self.Add_IP.text() != "":
             # This regular expression matches with an IPv4 address, any IP added SHOULD be let through.
-            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Add_IP.toPlainText()):
+            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Add_IP.text()):
                 # If the IP address is invalid, open an error message informing the user.
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setText("Enter a valid IP address.")
@@ -1179,7 +1226,7 @@ class ProjectorConfigurationWindow(QMainWindow):
 
             # If valid, append the client to the end of client_ip.txt
             with open("client_ip.txt", "a") as clients:
-                clients.write("\n" + self.Add_name.toPlainText() + "-" + self.Add_IP.toPlainText())
+                clients.write("\n" + self.Add_name.text() + "-" + self.Add_IP.text())
 
             # List clients again to refresh
             self.listClients()
@@ -1189,9 +1236,9 @@ class ProjectorConfigurationWindow(QMainWindow):
     #
     def editClient(self):
         # If either the name or IP are blank you are disallowed from committing that edit.
-        if self.Edit_name.toPlainText() != "" and self.Edit_IP.toPlainText() != "":
+        if self.Edit_name.text() != "" and self.Edit_IP.text() != "":
             # This regular expression matches with an IPv4 address, any IP added SHOULD be let through.
-            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Edit_IP.toPlainText()):
+            if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Edit_IP.text()):
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setText("Enter a valid IP address.")
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
@@ -1207,9 +1254,9 @@ class ProjectorConfigurationWindow(QMainWindow):
             for i in range(len(ips)):
                 if ips[i].strip() == self.Client_list.currentItem().text().strip():
                     if i == len(ips) - 1:
-                        ips[i] = self.Edit_name.toPlainText() + "-" + self.Edit_IP.toPlainText()
+                        ips[i] = self.Edit_name.text() + "-" + self.Edit_IP.text()
                     else:
-                        ips[i] = self.Edit_name.toPlainText() + "-" + self.Edit_IP.toPlainText() + "\n"
+                        ips[i] = self.Edit_name.text() + "-" + self.Edit_IP.text() + "\n"
                     break
 
             # Re-open the client_ip.txt file for editing and re-write the list
@@ -1223,6 +1270,13 @@ class ProjectorConfigurationWindow(QMainWindow):
     
     ## Allows the user to delete clients from the list
     def deleteClient(self):
+        if self.Client_list.count() == 1:
+            errorMessageBox = QMessageBox()
+            errorMessageBox.setText("You can't delete your last client!")
+            errorMessageBox.setStandardButtons(QMessageBox.Ok)
+            errorMessageBox.exec()
+            return
+
         ## Message box to confirm the user wishes to delete the client
         confirmMessageBox = QMessageBox()
         confirmMessageBox.setText("Are you sure you want to delete this client?")
