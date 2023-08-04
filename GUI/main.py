@@ -298,7 +298,7 @@ class GeometryEditingWindow(QMainWindow):
 
             if self.evaluateControlPoints(user_control_point_values = user_control_point_values, curve_type = curve_type) == 'Invalid':
                 return
-            
+
             self.control_points_list[self.Curve_box.currentText()] = [user_control_point_values, user_curve_opacity_alpha_value]
             self.bezier_curves[self.Curve_box.currentText()] = PathPatch(Path(user_control_point_values, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
 
@@ -371,7 +371,10 @@ class GeometryEditingWindow(QMainWindow):
 
         for control_point_value in user_control_point_values:
             if re.fullmatch("[-]?[0-9]+[.]?[0-9]*", str(control_point_value)) == None:
-                print('Invalid control point values! Values for control points cannot include letters, symbols, or spaces.')
+                failedMessageBox = QMessageBox()
+                failedMessageBox.setText('Invalid control point values! Values for control points cannot include letters, symbols, or spaces.')
+                failedMessageBox.setStandardButtons(QMessageBox.Ok)
+                failedMessageBox.exec()
                 return 'Invalid'
 
         return 'Valid'
@@ -381,13 +384,19 @@ class GeometryEditingWindow(QMainWindow):
     #   Either Control Points 1 or 4 have to be on the boundary lines for lines
     def evaluateControlPoints(self, user_control_point_values, curve_type):  
         if len(set(user_control_point_values)) == 1:
-                print('Invalid control points! All four control points cannot be on the same coordinate.')
+                failedMessageBox = QMessageBox()
+                failedMessageBox.setText('Invalid control points! All four control points cannot be on the same coordinate.')
+                failedMessageBox.setStandardButtons(QMessageBox.Ok)
+                failedMessageBox.exec()
                 return 'Invalid'  
         
         if curve_type == 'curve':
             if user_control_point_values[0][0] == user_control_point_values[3][0] and user_control_point_values[0][1] == user_control_point_values[3][1]:
                 if user_control_point_values[1][0] == user_control_point_values[2][0] and user_control_point_values[1][1] == user_control_point_values[2][1]:
-                    print('Invalid control points! Control point 1 and control point 4 cannot be the same if control point 2 and control point 3 are the same.')
+                    failedMessageBox = QMessageBox()
+                    failedMessageBox.setText('Invalid control points! Control point 1 and control point 4 cannot be the same if control point 2 and control point 3 are the same.')
+                    failedMessageBox.setStandardButtons(QMessageBox.Ok)
+                    failedMessageBox.exec()
                     return 'Invalid'
             else:         
                 return 'Valid'
@@ -397,12 +406,18 @@ class GeometryEditingWindow(QMainWindow):
                 and not (user_control_point_values[3][0] < 0 or user_control_point_values[3][0] > self.window_width or user_control_point_values[3][1] < 0 or user_control_point_values[3][1] > self.window_height)):
                 if ((user_control_point_values[0][0] != 0 and user_control_point_values[0][0] != self.window_width and user_control_point_values[0][1] != 0 and user_control_point_values[0][1] != self.window_height)
                     and (user_control_point_values[3][0] != 0 and user_control_point_values[3][0] != self.window_width and user_control_point_values[3][1] != 0 and user_control_point_values[3][1] != self.window_height)):
-                    print('Neither Control Points 1 or 4 are on the blue dashed lines!')
+                    failedMessageBox = QMessageBox()
+                    failedMessageBox.setText('Neither Control Points 1 or 4 are on the blue dashed lines!')
+                    failedMessageBox.setStandardButtons(QMessageBox.Ok)
+                    failedMessageBox.exec()
                     return 'Invalid'
                 else:
                     return 'Valid'
             else:
-                print('Control Points 1 or 4 are NOT within blue dashed lines!')
+                failedMessageBox = QMessageBox()
+                failedMessageBox.setText('Control Points 1 or 4 are NOT within blue dashed lines!')
+                failedMessageBox.setStandardButtons(QMessageBox.Ok)
+                failedMessageBox.exec()
                 return 'Invalid'
         
     def enableFillLineButtons(self, line_name, new_control_points, opacity_alpha_value):
@@ -1315,10 +1330,11 @@ class ProjectorConfigurationWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = QtWidgets.QStackedWidget()
+    widget.setWindowTitle("Planetarium Edge Blend")
     mainWindow = MainWindow()
     widget.addWidget(mainWindow)
-    #widget.setFixedHeight(600)
-    #widget.setFixedWidth(900)
+    #widget.setFixedHeight(900)
+    #widget.setFixedWidth(1531)
     widget.show()
 
     try:
