@@ -23,24 +23,26 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         loadUi("MainWindow.ui", self)
-        self.GeometryEdit_btn.clicked.connect(self.gotoGeometryEditingWindow)
+        widget.setWindowTitle('Planetarium Edge Blend')
+        self.GeometryEdit_btn.clicked.connect(self.gotoMaskFeedAndGeometryEditingWindow)
         self.ProjectorConfig_btn.clicked.connect(self.gotoProjectorConfigurationWindow)
 
-    def gotoGeometryEditingWindow(self):
-        geometryEdit = GeometryEditingWindow()
+    def gotoMaskFeedAndGeometryEditingWindow(self):
+        geometryEdit = MaskFeedAndGeometryEditingWindow()
+        widget.setWindowTitle('Mask Feed and Geometry Editing - Planetarium Edge Blend')
         widget.addWidget(geometryEdit)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 #test
     def gotoProjectorConfigurationWindow(self):
         projectorConfig = ProjectorConfigurationWindow()
+        widget.setWindowTitle('Projector Configuration - Planetarium Edge Blend')
         widget.addWidget(projectorConfig)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
-class GeometryEditingWindow(QMainWindow):
+class MaskFeedAndGeometryEditingWindow(QMainWindow):
     def __init__(self):
-        super(GeometryEditingWindow, self).__init__()
-        loadUi("GeometryEditingWindow.ui", self)
-        
+        super(MaskFeedAndGeometryEditingWindow, self).__init__()
+        loadUi("MaskFeedAndGeometryEditingWindow.ui", self)
 
         self.window_width = 1280
         self.window_height = 720
@@ -105,6 +107,14 @@ class GeometryEditingWindow(QMainWindow):
 
                 selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
                 self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
+
+            self.axes.set_title(self.Client_projectors_box.currentText() + ' Mask')
+            self.axes.set_xlabel('Screen Width')
+            self.axes.set_ylabel('Screen Height')
+            self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
+            self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
+            self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
+
             '''
             else:
                 
@@ -125,24 +135,27 @@ class GeometryEditingWindow(QMainWindow):
                     self.axes.add_patch(self.bezier_curves[curve])
                 self.SendInfo()
                 '''
+            
         except:
             self.Line_mode_btn.setEnabled(False)
             self.Control_point_1_btn.setEnabled(False)
             self.Control_point_2_btn.setEnabled(False)
             self.Control_point_3_btn.setEnabled(False)
             self.Control_point_4_btn.setEnabled(False)
-            self.Set_control_points_btn.setEnabled(False)
+            self.Set_curve_btn.setEnabled(False)
             self.Add_curve_btn.setEnabled(False)
             self.Remove_curve_btn.setEnabled(False)
             self.Show_contrast_curve_btn.setEnabled(False)
             self.Show_areas_btn.setEnabled(False)
             self.Show_control_points_btn.setEnabled(False)
+
             errorBox = QMessageBox()
+            errorBox.setWindowTitle('Connection Error - Planetarium Edge Blend')
             errorBox.setText("Client at IP Address not found. Are you sure the client application is running on it?")
             errorBox.exec()
-        self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
-        self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
-        self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
+
+            self.axes.set_title('Not connected to ' + self.Client_projectors_box.currentText())
+
         self.axes.grid(color = 'k')
         self.canvas.draw()   
 
@@ -159,7 +172,7 @@ class GeometryEditingWindow(QMainWindow):
         self.Control_point_2_btn.clicked.connect(self.controlPoint2Clicked)
         self.Control_point_3_btn.clicked.connect(self.controlPoint3Clicked)
         self.Control_point_4_btn.clicked.connect(self.controlPoint4Clicked)
-        self.Set_control_points_btn.clicked.connect(self.setControlPoints)
+        self.Set_curve_btn.clicked.connect(self.setCurve)
         
         self.Line_mode_btn.clicked.connect(self.lineModeClicked)
         self.control_point_1_x_line.textChanged.connect(self.controlPoint1XChanged)
@@ -184,6 +197,9 @@ class GeometryEditingWindow(QMainWindow):
     def setTextBoxes(self):
         if not self.bezier_curves.keys():
             self.Curve_box.addItem('No Curves')
+
+            self.Set_curve_btn.setEnabled(False)
+            self.Remove_curve_btn.setEnabled(False)
         else:
             self.Curve_box.clear()
             self.Curve_box.addItems(list(self.bezier_curves.keys()))
@@ -201,42 +217,63 @@ class GeometryEditingWindow(QMainWindow):
 
             self.redrawCanvas()
 
+    ## Retrieves all configured projectors' names and IP addresses.
+    # Reads a text file on the host computer containing all of the configured projectors' information and stores that information into a dictionary.
     def retrieveProjectors(self):
         client_servers_info_file = open('client_ip.txt', 'r')
 
+        # Reads each line from the text line and removes the newline character before creating a key value pair in the client_servers_IP_addresses dictionary.
         for line in client_servers_info_file:
             client_server_info = str.split(line.removesuffix('\n'), '-')
             self.client_servers_IP_addresses[client_server_info[0]] = client_server_info[1]
 
         client_servers_info_file.close()
 
+        # Updates the combo box so that the user can now select each of the configured projectors to view and edit a client projector mask.
         self.Client_projectors_box.addItems(self.client_servers_IP_addresses.keys())
         
+    ## Clears the mask graph containing all of Bezier curves for a client projector mask and plots each Bezier curve again.
     def redrawCanvas(self):
         self.axes.clear()
 
         self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
 
+        # If the user has clicked on the 'Show Control Points' button, then the control points for a selected Bezier curve will be plotted in red on the mask graph.
         if self.Curve_box.currentText() != 'No Curves' and self.show_control_points == True:
             for control_points in self.control_points_list[self.Curve_box.currentText()][0]:
                 self.axes.plot(control_points[0], control_points[1], 'ro')
 
+        # Iterates through each Bezier curve that the user has created and will evaluate each Bezier curve for a set of conditions before plotting them onto the graph.
         for curve in self.bezier_curves:
             curve_opacity_alpha_value = self.control_points_list[curve][1]
 
+            # Plots the edge of the current iterating Bezier curve and the area it makes up in red if the user has clicked on the 'Show Areas' button,
+            # the user has clicked on the 'Show Selected Curve in Contrasting Color' button,
+            # and the current iterating Bezier curve matches the current Bezier curve that the user has selected.
             if curve == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == True:
                 self.bezier_curves[curve].set(facecolor = (1, 0, 0, curve_opacity_alpha_value), edgecolor = (1, 0, 0, curve_opacity_alpha_value))
+            
+            # Plots only the edge of the current iterating Bezier curve in red if the user has only clicked on the
+            # 'Show Selected Curve in Contrasting Color' button and the current iterating Bezier curve matches the current Bezier curve that the user has selected.
             elif curve == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == False:
                 self.bezier_curves[curve].set(facecolor = 'None', edgecolor = (1, 0, 0, curve_opacity_alpha_value))
+
+            # Plots the edge of the current iterating Bezier curve and the area it makes up in black if the user has only clicked on 
+            # the 'Show Areas' button and the current iterating Bezier curve matches the current Bezier curve that the user has selected.
             elif curve == self.Curve_box.currentText() and self.contrast_curve == False and self.show_areas == True:
                 self.bezier_curves[curve].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = (0, 0, 0, curve_opacity_alpha_value))
             else:
+
+                # Plots the edge of the current iterating Bezier curve and the area it makes up in black if the user has clicked on the 'Show Areas' button. 
                 if self.show_areas == True:
                     self.bezier_curves[curve].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = (0, 0, 0, curve_opacity_alpha_value))
+
+                # Plots only the edge of the current iterating Bezier curve in black if all of other if/elif statements have failed. 
                 else:
                     self.bezier_curves[curve].set(facecolor = 'None', edgecolor = (0, 0, 0, curve_opacity_alpha_value))
                 self.axes.add_patch(self.bezier_curves[curve])
 
+        # Iterates through each line area that the user has created for filling in areas of the projection screen using lines.
         for area in self.line_area_shapes:
             curve_opacity_alpha_value = self.line_area_points[area][1]
 
@@ -266,7 +303,7 @@ class GeometryEditingWindow(QMainWindow):
         self.axes.grid(color = 'k')
         self.canvas.draw() 
 
-    def setControlPoints(self):      
+    def setCurve(self):      
         if self.Curve_box.currentText() == 'No Curves':
             return
         else:
@@ -351,7 +388,7 @@ class GeometryEditingWindow(QMainWindow):
         if self.Curve_box.currentText() == 'No Curves':
             self.Curve_box.removeItem(self.Curve_box.currentIndex())
             
-            self.Set_control_points_btn.setEnabled(True)
+            self.Set_curve_btn.setEnabled(True)
             self.Remove_curve_btn.setEnabled(True)
         else:
             self.Curve_box.setCurrentText('Curve ' + str(len(self.control_points_list)))
@@ -371,6 +408,7 @@ class GeometryEditingWindow(QMainWindow):
         for control_point_value in user_control_point_values:
             if re.fullmatch("[-]?[0-9]+[.]?[0-9]*", str(control_point_value)) == None:
                 failedMessageBox = QMessageBox()
+                failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
                 failedMessageBox.setText('Invalid control point values! Values for control points cannot include letters, symbols, or spaces.')
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
                 failedMessageBox.exec()
@@ -384,6 +422,7 @@ class GeometryEditingWindow(QMainWindow):
     def evaluateControlPoints(self, user_control_point_values, curve_type):  
         if len(set(user_control_point_values)) == 1:
                 failedMessageBox = QMessageBox()
+                failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
                 failedMessageBox.setText('Invalid control points! All four control points cannot be on the same coordinate.')
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
                 failedMessageBox.exec()
@@ -393,6 +432,7 @@ class GeometryEditingWindow(QMainWindow):
             if user_control_point_values[0][0] == user_control_point_values[3][0] and user_control_point_values[0][1] == user_control_point_values[3][1]:
                 if user_control_point_values[1][0] == user_control_point_values[2][0] and user_control_point_values[1][1] == user_control_point_values[2][1]:
                     failedMessageBox = QMessageBox()
+                    failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
                     failedMessageBox.setText('Invalid control points! Control point 1 and control point 4 cannot be the same if control point 2 and control point 3 are the same.')
                     failedMessageBox.setStandardButtons(QMessageBox.Ok)
                     failedMessageBox.exec()
@@ -400,12 +440,22 @@ class GeometryEditingWindow(QMainWindow):
             else:         
                 return 'Valid'
         else:    
+            if user_control_point_values[0][0] == user_control_point_values[3][0] and user_control_point_values[0][1] == user_control_point_values[3][1]:
+                failedMessageBox = QMessageBox()
+                failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
+                failedMessageBox.setText('Control points 1 and 4 cannot be on the same coordinate for lines!')
+                failedMessageBox.setStandardButtons(QMessageBox.Ok)
+                failedMessageBox.exec()
+                return 'Invalid'
+
+
             # Control Points 1 and 4 are within blue dashed lines
             if (not (user_control_point_values[0][0] < 0 or user_control_point_values[0][0] > self.window_width or user_control_point_values[0][1] < 0 or user_control_point_values[0][1] > self.window_height)
                 and not (user_control_point_values[3][0] < 0 or user_control_point_values[3][0] > self.window_width or user_control_point_values[3][1] < 0 or user_control_point_values[3][1] > self.window_height)):
                 if ((user_control_point_values[0][0] != 0 and user_control_point_values[0][0] != self.window_width and user_control_point_values[0][1] != 0 and user_control_point_values[0][1] != self.window_height)
                     and (user_control_point_values[3][0] != 0 and user_control_point_values[3][0] != self.window_width and user_control_point_values[3][1] != 0 and user_control_point_values[3][1] != self.window_height)):
                     failedMessageBox = QMessageBox()
+                    failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
                     failedMessageBox.setText('Neither Control Points 1 or 4 are on the blue dashed lines!')
                     failedMessageBox.setStandardButtons(QMessageBox.Ok)
                     failedMessageBox.exec()
@@ -414,6 +464,7 @@ class GeometryEditingWindow(QMainWindow):
                     return 'Valid'
             else:
                 failedMessageBox = QMessageBox()
+                failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
                 failedMessageBox.setText('Control Points 1 or 4 are NOT within blue dashed lines!')
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
                 failedMessageBox.exec()
@@ -458,7 +509,7 @@ class GeometryEditingWindow(QMainWindow):
         self.line_mode_on = False
         self.line_mode_click_count_parity = 0
         
-        self.Set_control_points_btn.setEnabled(False)
+        self.Set_curve_btn.setEnabled(False)
 
         self.Curve_box.setEnabled(False)
 
@@ -736,7 +787,7 @@ class GeometryEditingWindow(QMainWindow):
             self.Control_point_3_btn.setEnabled(True)
             self.Control_point_4_btn.setEnabled(True)
 
-            self.Set_control_points_btn.setEnabled(True)
+            self.Set_curve_btn.setEnabled(True)
 
             self.Curve_box.setEnabled(True)
 
@@ -803,7 +854,7 @@ class GeometryEditingWindow(QMainWindow):
                 if not self.bezier_curves.keys():
                     self.Curve_box.addItem('No Curves')
 
-                    self.Set_control_points_btn.setEnabled(False)
+                    self.Set_curve_btn.setEnabled(False)
                     self.Remove_curve_btn.setEnabled(False)
 
                 self.Curve_box.removeItem(self.Curve_box.currentIndex())
@@ -964,19 +1015,19 @@ class GeometryEditingWindow(QMainWindow):
         if event.button == MouseButton.LEFT:
             if self.control_point_1_click_cursor_enable:
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_1_x_line, self.control_point_1_y_line)
-                self.setControlPoints()
+                self.setCurve()
 
             elif self.control_point_2_click_cursor_enable:
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_2_x_line, self.control_point_2_y_line)
-                self.setControlPoints()
+                self.setCurve()
 
             elif self.control_point_3_click_cursor_enable:
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_3_x_line, self.control_point_3_y_line)
-                self.setControlPoints()
+                self.setCurve()
             
             elif self.control_point_4_click_cursor_enable:
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_4_x_line, self.control_point_4_y_line)
-                self.setControlPoints()
+                self.setCurve()
 
     def lineModeClicked(self):
 
@@ -1041,7 +1092,7 @@ class GeometryEditingWindow(QMainWindow):
             self.Control_point_2_btn.setEnabled(True)
             self.Control_point_3_btn.setEnabled(True)
             self.Control_point_4_btn.setEnabled(True)
-            self.Set_control_points_btn.setEnabled(True)
+            self.Set_curve_btn.setEnabled(True)
             self.Add_curve_btn.setEnabled(True)
             self.Remove_curve_btn.setEnabled(True)
             self.Show_contrast_curve_btn.setEnabled(True)
@@ -1062,6 +1113,7 @@ class GeometryEditingWindow(QMainWindow):
 
                 selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
                 self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
+
                 '''
             else:
                 control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
@@ -1088,7 +1140,7 @@ class GeometryEditingWindow(QMainWindow):
             self.Control_point_2_btn.setEnabled(False)
             self.Control_point_3_btn.setEnabled(False)
             self.Control_point_4_btn.setEnabled(False)
-            self.Set_control_points_btn.setEnabled(False)
+            self.Set_curve_btn.setEnabled(False)
             self.Add_curve_btn.setEnabled(False)
             self.Remove_curve_btn.setEnabled(False)
             self.Show_contrast_curve_btn.setEnabled(False)
@@ -1096,9 +1148,11 @@ class GeometryEditingWindow(QMainWindow):
             self.Show_control_points_btn.setEnabled(False)
             
             errorBox = QMessageBox()
+            errorBox.setWindowTitle('Connection Error - Planetarium Edge Blend')
             errorBox.setText("Client at IP Address not found. Are you sure the client application is running on it?")
             errorBox.exec()
-        
+
+            self.axes.set_title('Not connected to ' + self.Client_projectors_box.currentText())
         
         self.Curve_box.clear()
         self.Curve_box.addItems(list(self.bezier_curves.keys()))
@@ -1107,9 +1161,6 @@ class GeometryEditingWindow(QMainWindow):
         self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
         self.axes.grid(color = 'k')
         self.canvas.draw() 
-        
-        
-       
 
     ###########################################################
     # NETWORKING
@@ -1243,6 +1294,7 @@ class ProjectorConfigurationWindow(QMainWindow):
             if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Add_IP.text()):
                 # If the IP address is invalid, open an error message informing the user.
                 failedMessageBox = QMessageBox()
+                failedMessageBox.setWindowTitle('Projection Configuration Error - Planetarium Edge Blend')
                 failedMessageBox.setText("Enter a valid IP address.")
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
                 failedMessageBox.exec()
@@ -1267,6 +1319,7 @@ class ProjectorConfigurationWindow(QMainWindow):
             # This regular expression matches with an IPv4 address, any IP added SHOULD be let through.
             if not re.fullmatch("((([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))[.]){3}(([0-9])|([1-9][0-9])|([1][0-9][0-9])|([2][0-4][0-9])|([2][5][0-5]))", self.Edit_IP.text()):
                 failedMessageBox = QMessageBox()
+                failedMessageBox.setWindowTitle('Projection Configuration Error - Planetarium Edge Blend')
                 failedMessageBox.setText("Enter a valid IP address.")
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
                 failedMessageBox.exec()
@@ -1300,6 +1353,7 @@ class ProjectorConfigurationWindow(QMainWindow):
     def deleteClient(self):
         ## Message box to confirm the user wishes to delete the client
         confirmMessageBox = QMessageBox()
+        confirmMessageBox.setWindowTitle('Projector Configuration - Planetarium Edge Blend')
         confirmMessageBox.setText("Are you sure you want to delete this client?")
         confirmMessageBox.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
         confirmMessageBox.setDefaultButton(QMessageBox.Cancel)
@@ -1329,7 +1383,6 @@ class ProjectorConfigurationWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = QtWidgets.QStackedWidget()
-    widget.setWindowTitle("Planetarium Edge Blend")
     mainWindow = MainWindow()
     widget.addWidget(mainWindow)
     #widget.setFixedHeight(900)
