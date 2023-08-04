@@ -98,7 +98,7 @@ QPushButton:pressed {
 }</string>
             </property>
             <property name="text">
-             <string>Geometry Editing</string>
+             <string>Mask Feed and Geometry Editing</string>
             </property>
             <attribute name="buttonGroup">
              <string notr="true">buttonGroup</string>
