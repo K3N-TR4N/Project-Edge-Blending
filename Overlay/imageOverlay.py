@@ -68,13 +68,15 @@ class ImageWindow(QMainWindow):
         '''
 
         for curveName, value in self.control_points_list.items():
+            if curveName in self.line_area_points.keys():
+                continue
             opacity = (0, 0, 0, value[1])
-            bezierCurve = PathPatch(Path(value[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = opacity, edgecolor = opacity, transform = self.axes.transData)
+            bezierCurve = PathPatch(Path(value[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = opacity, edgecolor = "none", transform = self.axes.transData)
             self.axes.add_patch(bezierCurve)
 
         for areaName, value in self.line_area_points.items():
             opacity = (0, 0, 0, value[1])
-            bezierArea = PathPatch(Path(value[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = opacity, edgecolor = opacity, transform=self.axes.transData)
+            bezierArea = PathPatch(Path(value[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = opacity, edgecolor = "none", transform=self.axes.transData)
             self.axes.add_patch(bezierArea)
         #plt.show()
 
@@ -141,13 +143,15 @@ class ImageWindow(QMainWindow):
             self.axes.set_xlim([0, self.window_width])
             self.axes.set_ylim([0, self.window_height])
             for curveName, value in self.control_points_list.items():
+                if curveName in self.line_area_points.keys():
+                    continue
                 opacity = (0, 0, 0, value[1])
-                bezierCurve = PathPatch(Path(value[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = opacity, edgecolor = (0, 0, 0, 0.01), transform = self.axes.transData)
+                bezierCurve = PathPatch(Path(value[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), facecolor = opacity, edgecolor = "none", transform = self.axes.transData)
                 self.axes.add_patch(bezierCurve)
 
             for areaName, value in self.line_area_points.items():
                 opacity = (0, 0, 0, value[1])
-                bezierArea = PathPatch(Path(value[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = opacity, edgecolor = (0, 0, 0, 0.01), transform=self.axes.transData)
+                bezierArea = PathPatch(Path(value[0], [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), facecolor = opacity, edgecolor = "none", transform=self.axes.transData)
                 self.axes.add_patch(bezierArea)
 
             
@@ -192,8 +196,8 @@ if __name__ == "__main__":
     window = ImageWindow()
 
     # Produces a borderless window
-    window.setWindowFlags(Qt.FramelessWindowHint)
-    #window.setWindowFlags(Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+    #window.setWindowFlags(Qt.FramelessWindowHint)
+    window.setWindowFlags(Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
 
     # This indicates that the widget should have a translucent background
     window.setAttribute(Qt.WA_TranslucentBackground)

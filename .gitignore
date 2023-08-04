@@ -161,3 +161,12 @@ cython_debug/
 /.vs/Project-Edge-Blending/FileContentIndex
 /.vs/Project-Edge-Blending/v17
 /.vs
+/CAL/clientappstart.py
+/.gitignore
+/.gitignore
+/Overlay/cilentMask.py
+/Overlay/Projectors.txt
+/.gitignore
+/Overlay/bezierInfo
+/Overlay/figure.png
+/GUI/client_ip.txt

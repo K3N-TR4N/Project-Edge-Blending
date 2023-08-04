@@ -23,6 +23,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         loadUi("MainWindow.ui", self)
+        self.setFixedSize(1280,773)
         self.GeometryEdit_btn.clicked.connect(self.gotoGeometryEditingWindow)
         self.ProjectorConfig_btn.clicked.connect(self.gotoProjectorConfigurationWindow)
 
@@ -40,6 +41,7 @@ class GeometryEditingWindow(QMainWindow):
     def __init__(self):
         super(GeometryEditingWindow, self).__init__()
         loadUi("GeometryEditingWindow.ui", self)
+        
 
         self.window_width = 1280
         self.window_height = 720
@@ -104,8 +106,9 @@ class GeometryEditingWindow(QMainWindow):
 
                 selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
                 self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
-
+            '''
             else:
+                
                 control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
                 control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
                 control_points_3 = [(float(1 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
@@ -121,7 +124,8 @@ class GeometryEditingWindow(QMainWindow):
                 
                 for curve in self.bezier_curves:
                     self.axes.add_patch(self.bezier_curves[curve])
-                self.SendInfo()      
+                self.SendInfo()
+                '''
         except:
             self.Line_mode_btn.setEnabled(False)
             self.Control_point_1_btn.setEnabled(False)
@@ -137,7 +141,11 @@ class GeometryEditingWindow(QMainWindow):
             errorBox = QMessageBox()
             errorBox.setText("Client at IP Address not found. Are you sure the client application is running on it?")
             errorBox.exec()
-          
+        self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
+        self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
+        self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
+        self.axes.grid(color = 'k')
+        self.canvas.draw()   
 
         #####################################################################
 
@@ -1040,7 +1048,7 @@ class GeometryEditingWindow(QMainWindow):
 
                 selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
                 self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
-
+                '''
             else:
                 control_points_1 = [(float(0 * self.window_width), float(0 * self.window_height)), (float(0.5 * self.window_width), float(0.5 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height)), (float(0 * self.window_width), float(1 * self.window_height))]
                 control_points_2 = [(float(0 * self.window_width), float(1 * self.window_height)), (float(0.5 * self.window_width), float(0 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height)), (float(1 * self.window_width), float(1 * self.window_height))]
@@ -1059,6 +1067,7 @@ class GeometryEditingWindow(QMainWindow):
                     self.axes.add_patch(self.bezier_curves[curve])
 
                 self.SendInfo()
+                '''
         except:
             self.Line_mode_btn.setEnabled(False)
             self.Control_point_1_btn.setEnabled(False)
@@ -1077,14 +1086,14 @@ class GeometryEditingWindow(QMainWindow):
             errorBox.exec()
         
         
-
+        self.Curve_box.clear()
+        self.Curve_box.addItems(list(self.bezier_curves.keys()))
         self.setTextBoxes()    
         self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
         self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
         self.axes.grid(color = 'k')
         self.canvas.draw() 
-        self.Curve_box.clear()
-        self.Curve_box.addItems(list(self.bezier_curves.keys()))
+        
         
        
 
@@ -1186,7 +1195,8 @@ class ProjectorConfigurationWindow(QMainWindow):
         with open("client_ip.txt", "r") as clients:
             ips = clients.readlines()
         for ip in ips:
-            self.Client_list.addItem(ip.strip())
+            if ip.strip() != "":
+                self.Client_list.addItem(ip.strip())
 
         # Do some cleanup, disable the edit function as you have to select to do it.
         self.Edit_name.setEnabled(False)
@@ -1226,7 +1236,10 @@ class ProjectorConfigurationWindow(QMainWindow):
 
             # If valid, append the client to the end of client_ip.txt
             with open("client_ip.txt", "a") as clients:
-                clients.write("\n" + self.Add_name.text() + "-" + self.Add_IP.text())
+                if self.Client_list.count() == 0:
+                    clients.write(self.Add_name.text() + "-" + self.Add_IP.text())
+                else:
+                    clients.write("\n" + self.Add_name.text() + "-" + self.Add_IP.text())
 
             # List clients again to refresh
             self.listClients()
@@ -1262,7 +1275,8 @@ class ProjectorConfigurationWindow(QMainWindow):
             # Re-open the client_ip.txt file for editing and re-write the list
             clients = open("client_ip.txt", "w")
             for ip in ips:
-                 clients.write(ip)
+                if ip.strip() != "":
+                    clients.write(ip)
             clients.close()
 
             # List clients again to refresh
@@ -1270,13 +1284,6 @@ class ProjectorConfigurationWindow(QMainWindow):
     
     ## Allows the user to delete clients from the list
     def deleteClient(self):
-        if self.Client_list.count() == 1:
-            errorMessageBox = QMessageBox()
-            errorMessageBox.setText("You can't delete your last client!")
-            errorMessageBox.setStandardButtons(QMessageBox.Ok)
-            errorMessageBox.exec()
-            return
-
         ## Message box to confirm the user wishes to delete the client
         confirmMessageBox = QMessageBox()
         confirmMessageBox.setText("Are you sure you want to delete this client?")
@@ -1297,7 +1304,8 @@ class ProjectorConfigurationWindow(QMainWindow):
                     break
             clients = open("client_ip.txt", "w")
             for ip in ips:
-                 clients.write(ip)
+                if ip.strip() != "":
+                    clients.write(ip)
             clients.close()
             self.listClients()
 
