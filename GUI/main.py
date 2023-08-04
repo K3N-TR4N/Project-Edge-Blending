@@ -23,7 +23,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         loadUi("MainWindow.ui", self)
-        self.setFixedSize(1280,773)
         self.GeometryEdit_btn.clicked.connect(self.gotoGeometryEditingWindow)
         self.ProjectorConfig_btn.clicked.connect(self.gotoProjectorConfigurationWindow)
 
