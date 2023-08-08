@@ -46,7 +46,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 
         self.window_width = 1280
         self.window_height = 720
-        self.boundary_size = 100
+        self.boundary_size = 300
         self.boundaries_x = [0, 0, self.window_width, self.window_width, 0]
         self.boundaries_y = [self.window_height, 0, 0, self.window_height, self.window_height]
 
@@ -112,8 +112,8 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
             self.axes.set_xlabel('Screen Width')
             self.axes.set_ylabel('Screen Height')
             self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
-            self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
-            self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
+            self.axes.set_xlim((0 - self.boundary_size, self.window_width + self.boundary_size))
+            self.axes.set_ylim((0 - self.boundary_size, self.window_height + self.boundary_size))
 
             '''
             else:
@@ -166,8 +166,8 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.Curve_box.currentTextChanged.connect(self.selectedCurveChanged)
         self.Client_projectors_box.currentTextChanged.connect(self.clientComboBoxChanged)
 
-        self.Add_curve_btn.clicked.connect(self.addNewCurveClicked)
-        self.Remove_curve_btn.clicked.connect(self.removeCurveClicked)
+        self.Add_curve_btn.clicked.connect(self.addNewCurve)
+        self.Remove_curve_btn.clicked.connect(self.removeCurve)
         self.Control_point_1_btn.clicked.connect(self.controlPoint1Clicked)
         self.Control_point_2_btn.clicked.connect(self.controlPoint2Clicked)
         self.Control_point_3_btn.clicked.connect(self.controlPoint3Clicked)
@@ -188,7 +188,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.Above_line_btn.setEnabled(False)
         self.Below_line_btn.setEnabled(False)
 
-        self.Show_contrast_curve_btn.clicked.connect(self.contrastCurveClicked)
+        self.Show_contrast_curve_btn.clicked.connect(self.showContrastCurve)
         self.Show_areas_btn.clicked.connect(self.showAreas)
         self.Show_control_points_btn.clicked.connect(self.showControlPoints)
         
@@ -232,13 +232,15 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         # Updates the combo box so that the user can now select each of the configured projectors to view and edit a client projector mask.
         self.Client_projectors_box.addItems(self.client_servers_IP_addresses.keys())
         
-    ## Clears the mask graph containing all of Bezier curves for a client projector mask and plots each Bezier curve again.
+    ## Clears the mask graph containing all of Bezier curves for a client projector mask and plots each Bezier curve and its corresponding line area shape again.
     def redrawCanvas(self):
         self.axes.clear()
 
+        # Plots the blue dashed border lines onto the graph.
         self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
 
-        # If the user has clicked on the 'Show Control Points' button, then the control points for a selected Bezier curve will be plotted in red on the mask graph.
+        # Plots the control points for the Bezier curve that the user has select in the Curve_box comboBox in a red color on the mask graph if the user has clicked on the
+        # 'Show Control Points' button.
         if self.Curve_box.currentText() != 'No Curves' and self.show_control_points == True:
             for control_points in self.control_points_list[self.Curve_box.currentText()][0]:
                 self.axes.plot(control_points[0], control_points[1], 'ro')
@@ -247,149 +249,155 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         for curve in self.bezier_curves:
             curve_opacity_alpha_value = self.control_points_list[curve][1]
 
-            # Plots the edge of the current iterating Bezier curve and the area it makes up in red if the user has clicked on the 'Show Areas' button,
-            # the user has clicked on the 'Show Selected Curve in Contrasting Color' button,
-            # and the current iterating Bezier curve matches the current Bezier curve that the user has selected.
+            # Sets the edge of the current iterating Bezier curve and the area it makes up to a red color if the current iterating Bezier curve matches 
+            # the Bezier curve that the user has selected, the user has clicked on the 'Show Areas' button to be on,
+            # and the user has clicked on the 'Show Selected Curve in Contrasting Color' button to be on,
             if curve == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == True:
                 self.bezier_curves[curve].set(facecolor = (1, 0, 0, curve_opacity_alpha_value), edgecolor = (1, 0, 0, curve_opacity_alpha_value))
             
-            # Plots only the edge of the current iterating Bezier curve in red if the user has only clicked on the
-            # 'Show Selected Curve in Contrasting Color' button and the current iterating Bezier curve matches the current Bezier curve that the user has selected.
+            # Sets only the edge of the current iterating Bezier curve to a red color if the current iterating Bezier curve matches the Bezier curve 
+            # that the user has select in the Curve_box comboBox and the user has only clicked on the 'Show Selected Curve in Contrasting Color' button to be on.
             elif curve == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == False:
                 self.bezier_curves[curve].set(facecolor = 'None', edgecolor = (1, 0, 0, curve_opacity_alpha_value))
 
-            # Plots the edge of the current iterating Bezier curve and the area it makes up in black if the user has only clicked on 
-            # the 'Show Areas' button and the current iterating Bezier curve matches the current Bezier curve that the user has selected.
-            elif curve == self.Curve_box.currentText() and self.contrast_curve == False and self.show_areas == True:
-                self.bezier_curves[curve].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = (0, 0, 0, curve_opacity_alpha_value))
+            # Handles the cases where the current iterating Bezier curve does not match the Bezier curve that the user has select in the Curve_box comboBox and when the user
+            # hasn't clicked on the 'Show Selected Curve in Contrasting Color' button to be on.
             else:
 
-                # Plots the edge of the current iterating Bezier curve and the area it makes up in black if the user has clicked on the 'Show Areas' button. 
+                # Sets the edge of the current iterating Bezier curve and the area it makes up to a black color if the user has clicked
+                # on the 'Show Areas' button to be on. 
                 if self.show_areas == True:
                     self.bezier_curves[curve].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = (0, 0, 0, curve_opacity_alpha_value))
 
-                # Plots only the edge of the current iterating Bezier curve in black if all of other if/elif statements have failed. 
+                # Sets only the edge of the current iterating Bezier curve in a black color if the user hasn't clicked on the 'Show Areas' button to be on. 
                 else:
                     self.bezier_curves[curve].set(facecolor = 'None', edgecolor = (0, 0, 0, curve_opacity_alpha_value))
+                
+                # Plots the current iterating Bezier curve onto the graph.
                 self.axes.add_patch(self.bezier_curves[curve])
 
-        # Iterates through each line area that the user has created for filling in areas of the projection screen using lines.
+        # Iterates through each line area shape that the user has created for filling in areas of the projection screen using lines.
         for area in self.line_area_shapes:
             curve_opacity_alpha_value = self.line_area_points[area][1]
 
+            # Sets the area of the current iterating line area shape to a red color if the the current iterating line area shape matches the curve 
+            # that the user has selected, the user has clicked on the 'Show Selected Curve in Contrasting Color' button to be on,
+            # and the user has clicked on the 'Show Areas' button to be on.
             if area == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == True:
                 self.line_area_shapes[area].set(facecolor = (1, 0, 0, curve_opacity_alpha_value), edgecolor = 'None')
-            elif area == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == False:
-                self.line_area_shapes[area].set(facecolor = 'None', edgecolor = 'None')
-            elif area == self.Curve_box.currentText() and self.contrast_curve == False and self.show_areas == True:
-                self.line_area_shapes[area].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = 'None')
+
+            # Handles the cases where the current iterating line area shape does not match the curve that the user has select in the Curve_box comboBox and when the user hasn't clicked on
+            # the 'Show Selected Curve in Contrasting Color' to be on.
             else:
+
+                # Sets the area of the current iterating line area shape to a black color if the user has clicked on the 'Show Areas' button to be on.
                 if self.show_areas == True:
                     self.line_area_shapes[area].set(facecolor = (0, 0, 0, curve_opacity_alpha_value), edgecolor = 'None')
+                
+                # Makes the area of the current iterating line shape nonvisible to the user if the user hasn't clicked on the 'Show Areas' button to be on.
                 else:
                     self.line_area_shapes[area].set(facecolor = 'None', edgecolor = 'None')
+
+                # Plots the current iterating line area shape onto the graph.
                 self.axes.add_patch(self.line_area_shapes[area])
 
-        if self.Curve_box.currentText() in self.bezier_curves:
+        # Plots the current Bezier curve that the user has select in the Curve_box comboBox onto the graph if the user has clicked on the 'Show Selected Curve in Contrasting Color' 
+        # button to be on.
+        if self.Curve_box.currentText() in self.bezier_curves.keys() and self.contrast_curve == True:
             self.axes.add_patch(self.bezier_curves[self.Curve_box.currentText()])
-        if self.Curve_box.currentText() in self.line_area_shapes.keys():
+        
+        # Plots the line area shape that matches the current Bezier curve that the user has select in the Curve_box comboBox onto the graph if the user has clicked on 
+        # the 'Show Selected Curve in Contrasting Color' button to be on.
+        if self.Curve_box.currentText() in self.line_area_shapes.keys() and self.contrast_curve == True:
             self.axes.add_patch(self.line_area_shapes[self.Curve_box.currentText()])
 
+        # Sets the graph's visuals and draws the graph onto the GUI.
         self.axes.set_title(self.Client_projectors_box.currentText() + ' Mask')
         self.axes.set_xlabel('Screen Width')
         self.axes.set_ylabel('Screen Height')
-        self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
-        self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
+        self.axes.set_xlim((0 - self.boundary_size, self.window_width + self.boundary_size))
+        self.axes.set_ylim((0 - self.boundary_size, self.window_height + self.boundary_size))
         self.axes.grid(color = 'k')
         self.canvas.draw() 
 
+    ## Edits the Bezier curve that the user has select in the Curve_box comboBox based on the user's inputs for the line edit fields and opacity spin box and plots it on the mask graph.
+    #  This happens once the user clicks on the 'Set curve' button.
     def setCurve(self):      
-        if self.Curve_box.currentText() == 'No Curves':
-            return
-        else:
-            
-            if self.evaluateLineEditFields() == 'Valid':
-                user_control_point_1_x = float(self.control_point_1_x_line.text())
-                user_control_point_2_x = float(self.control_point_2_x_line.text())
-                user_control_point_3_x = float(self.control_point_3_x_line.text())
-                user_control_point_4_x = float(self.control_point_4_x_line.text())
-                user_control_point_1_y = float(self.control_point_1_y_line.text())
-                user_control_point_2_y = float(self.control_point_2_y_line.text())
-                user_control_point_3_y = float(self.control_point_3_y_line.text())
-                user_control_point_4_y = float(self.control_point_4_y_line.text())
 
-                user_curve_opacity_alpha_value = round(float(self.Curve_opacity_box.cleanText()) / 100, 2)
-            else: 
-                return
-            
-            user_control_point_values =  [(user_control_point_1_x, user_control_point_1_y), 
-                                          (user_control_point_2_x, user_control_point_2_y), 
-                                          (user_control_point_3_x, user_control_point_3_y), 
-                                          (user_control_point_4_x, user_control_point_4_y)]
-
-            curve_type = 'curve'
-
-            if len(set(user_control_point_values)) == 2:
-                curve_type = 'line'
-
-            if self.evaluateControlPoints(user_control_point_values = user_control_point_values, curve_type = curve_type) == 'Invalid':
-                return
-
-            self.control_points_list[self.Curve_box.currentText()] = [user_control_point_values, user_curve_opacity_alpha_value]
-            self.bezier_curves[self.Curve_box.currentText()] = PathPatch(Path(user_control_point_values, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
-
-            if self.Curve_box.currentText() in self.line_area_shapes:
-                del self.line_area_points[self.Curve_box.currentText()]
-                del self.line_area_shapes[self.Curve_box.currentText()]
-
-            self.redrawCanvas()
-            
-            if curve_type == 'line':
-                self.enableFillLineButtons(line_name = self.Curve_box.currentText(), new_control_points = user_control_point_values, opacity_alpha_value = user_curve_opacity_alpha_value)
-            
-            self.SendInfo()
-        
-    def addNewCurveClicked(self):
-
+        # Checks whether the values in the line edit fields are valid.
+        # If the values are valid, then the convertUserInputsForCurve() function is called to convert the values.
         if self.evaluateLineEditFields() == 'Valid':
-            user_control_point_1_x = float(self.control_point_1_x_line.text())
-            user_control_point_2_x = float(self.control_point_2_x_line.text())
-            user_control_point_3_x = float(self.control_point_3_x_line.text())
-            user_control_point_4_x = float(self.control_point_4_x_line.text())
-            user_control_point_1_y = float(self.control_point_1_y_line.text())
-            user_control_point_2_y = float(self.control_point_2_y_line.text())
-            user_control_point_3_y = float(self.control_point_3_y_line.text())
-            user_control_point_4_y = float(self.control_point_4_y_line.text())
+            user_control_point_values, user_curve_opacity_alpha_value = self.convertUserInputsForCurve()
 
-            user_curve_opacity_alpha_value = round(float(self.Curve_opacity_box.cleanText()) / 100, 2)
+        # Stops the function call if the values in the line edit fields are invalid. 
         else: 
             return
-        
-        user_control_point_values =  [(user_control_point_1_x, user_control_point_1_y), 
-                                      (user_control_point_2_x, user_control_point_2_y), 
-                                      (user_control_point_3_x, user_control_point_3_y),
-                                      (user_control_point_4_x, user_control_point_4_y)]
-
+                                        
         curve_type = 'curve'
 
+        # Considers the Bezier curve to be a line if there are only two unique sets of xy coordinates from the user's inputs for the line edit fields.
         if len(set(user_control_point_values)) == 2:
             curve_type = 'line'
 
-        new_bezier_curve = PathPatch(Path(user_control_point_values, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
+        # Stops the function call if the user's control points do not meet the conditions for valid control point rules depending on the curve type.
+        if self.evaluateControlPoints(user_control_point_values = user_control_point_values, curve_type = curve_type) == 'Invalid':
+            return
+
+        # Edits the control_points_list and bezier_curves dictionaries based on the user's control points and opacity for the Bezier curve that they have selected.
+        self.control_points_list[self.Curve_box.currentText()] = [user_control_point_values, user_curve_opacity_alpha_value]
+        self.bezier_curves[self.Curve_box.currentText()] = PathPatch(Path(user_control_point_values, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
+
+        # If the Bezier curve that the user has select in the Curve_box comboBox was previously considered a line before the user clicked on the 'Set Curve' button,
+        # then this deletes the previous line information associated to the Bezier curve before the user changed the Bezier curve into a curve.
+        if self.Curve_box.currentText() in self.line_area_shapes:
+            del self.line_area_points[self.Curve_box.currentText()]
+            del self.line_area_shapes[self.Curve_box.currentText()]
+
+        self.redrawCanvas()
         
+        if curve_type == 'line':
+            self.enableFillLineButtons(line_name = self.Curve_box.currentText(), new_control_points = user_control_point_values, opacity_alpha_value = user_curve_opacity_alpha_value)
+        
+        self.SendInfo()
+        
+    # Creates a new Bezier curve based on the user's inputs for the line edit fields and opacity spin box and plots it on the mask graph.
+    # This happens once the user clicks on the 'Add new curve' button.
+    def addNewCurve(self):
+
+        # Checks whether the values in the line edit fields are valid.
+        # If the values are valid, then the convertUserInputsForCurve() function is called to convert the values.
+        if self.evaluateLineEditFields() == 'Valid':
+            user_control_point_values, user_curve_opacity_alpha_value = self.convertUserInputsForCurve()
+
+        # Stops the function call if the the values in the line edit fields are not valid.
+        else: 
+            return
+                                      
+        curve_type = 'curve'
+
+        # Considers the Bezier curve a line if there are only two unique sets of coordinates from the user's inputs for the line edit fields.
+        if len(set(user_control_point_values)) == 2:
+            curve_type = 'line'
+
+        # Adds a new key value pair into the control_points_list and bezier_curves dictionaries based on the user's inputs for the line edit fields and spin box. 
         new_bezier_curve_name = 'Curve ' + str(len(self.control_points_list) + 1)
         self.control_points_list[new_bezier_curve_name] = [user_control_point_values, user_curve_opacity_alpha_value]
+        new_bezier_curve = PathPatch(Path(user_control_point_values, [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), transform = self.axes.transData)
         self.bezier_curves[new_bezier_curve_name] = new_bezier_curve
 
+        # Adds a new curve into the Curve_box comboBox and draws the new Bezier curve onto the graph. 
         self.Curve_box.addItem(new_bezier_curve_name)
         self.axes.add_patch(new_bezier_curve)
         self.canvas.draw()
 
+        # Activates the 'Set Curve' and 'Remove Curve' buttons if the user previously had no Bezier curves before pressing the 'Add Curve' button and
+        # deletes the 'No Curves' item in the Curve_box comboBox.
         if self.Curve_box.currentText() == 'No Curves':
             self.Curve_box.removeItem(self.Curve_box.currentIndex())
-            
             self.Set_curve_btn.setEnabled(True)
             self.Remove_curve_btn.setEnabled(True)
+
+        # Sets the text in the Curve_box comboBox to the latest Bezier curve that the user added.
         else:
             self.Curve_box.setCurrentText('Curve ' + str(len(self.control_points_list)))
 
@@ -398,6 +406,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 
         self.SendInfo()
 
+    ## Determines whether the values in the line edit fields consist of only numbered key inputs.
     def evaluateLineEditFields(self):
 
         user_control_point_values = [self.control_point_1_x_line.text(), self.control_point_2_x_line.text(), 
@@ -405,6 +414,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                                      self.control_point_1_y_line.text(), self.control_point_2_y_line.text(), 
                                      self.control_point_3_y_line.text(), self.control_point_4_y_line.text()]
 
+        # Outputs an error message box to the user if one of the user's inputs contains any values other than numbered key inputs.
         for control_point_value in user_control_point_values:
             if re.fullmatch("[-]?[0-9]+[.]?[0-9]*", str(control_point_value)) == None:
                 failedMessageBox = QMessageBox()
@@ -416,10 +426,10 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 
         return 'Valid'
 
-    #   All four control points cannot have the same coordinate
-    #   Control Points 1 and 4 cannot be at the same point if Control Points 2 and 3 are at the same point.
-    #   Either Control Points 1 or 4 have to be on the boundary lines for lines
+    ## Determines whether the user's control points fall under the rules for each Bezier curve type.
     def evaluateControlPoints(self, user_control_point_values, curve_type):  
+
+        # Outputs an error message box to the user if all of the user's control points are on the same coordinate.
         if len(set(user_control_point_values)) == 1:
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
@@ -428,7 +438,11 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                 failedMessageBox.exec()
                 return 'Invalid'  
         
+        # Specifies the conditions for valid control points for Bezier curves that are considered as curves.
         if curve_type == 'curve':
+
+            # Outputs an error message box to the user if the user's inputs for control points 1 and 4 are on same coordinate
+            # and the user's inputs for controls 2 and 3 are on the same coordinate for Bezier curves that are considered as curves.
             if user_control_point_values[0][0] == user_control_point_values[3][0] and user_control_point_values[0][1] == user_control_point_values[3][1]:
                 if user_control_point_values[1][0] == user_control_point_values[2][0] and user_control_point_values[1][1] == user_control_point_values[2][1]:
                     failedMessageBox = QMessageBox()
@@ -439,7 +453,11 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                     return 'Invalid'
             else:         
                 return 'Valid'
+            
+        # Specifies the conditions for valid control points for Bezier curves that are considered as lines.
         else:    
+            # Outputs an error message to the user if the user's inputs for control points 1 and 4 are on the same coordinates for Bezier curves
+            # that are considered as lines.
             if user_control_point_values[0][0] == user_control_point_values[3][0] and user_control_point_values[0][1] == user_control_point_values[3][1]:
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
@@ -449,9 +467,11 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                 return 'Invalid'
 
 
-            # Control Points 1 and 4 are within blue dashed lines
+            # Evaluates whether either control points 1 and 4 are within the blue dashed lines.
             if (not (user_control_point_values[0][0] < 0 or user_control_point_values[0][0] > self.window_width or user_control_point_values[0][1] < 0 or user_control_point_values[0][1] > self.window_height)
                 and not (user_control_point_values[3][0] < 0 or user_control_point_values[3][0] > self.window_width or user_control_point_values[3][1] < 0 or user_control_point_values[3][1] > self.window_height)):
+                
+                # Outputs an error message to the user if neither of the user's inputs for control points 1 or 4 are on the blue dashed lines.
                 if ((user_control_point_values[0][0] != 0 and user_control_point_values[0][0] != self.window_width and user_control_point_values[0][1] != 0 and user_control_point_values[0][1] != self.window_height)
                     and (user_control_point_values[3][0] != 0 and user_control_point_values[3][0] != self.window_width and user_control_point_values[3][1] != 0 and user_control_point_values[3][1] != self.window_height)):
                     failedMessageBox = QMessageBox()
@@ -462,6 +482,8 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                     return 'Invalid'
                 else:
                     return 'Valid'
+                
+            # Outputs an error message box to the user if the user's inputs for either control points 1 and 4 are not within the blue dashed lines.
             else:
                 failedMessageBox = QMessageBox()
                 failedMessageBox.setWindowTitle('Mask Feed and Geometry Editing Error - Planetarium Edge Blend')
@@ -469,15 +491,56 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
                 failedMessageBox.exec()
                 return 'Invalid'
+            
+    ## Returns a list of xy coordinates and a single opacity number by converting all of the values in the line edit fields and the spin box.
+    def convertUserInputsForCurve(self):
         
+        # Creates a list of xy coordinates by converting each value from the line edit fields into a float and pairing each x and y value with its corresponding
+        # control point.
+        user_control_point_values =  [(float(self.control_point_1_x_line.text()), float(self.control_point_1_y_line.text())), 
+                                      (float(self.control_point_2_x_line.text()), float(self.control_point_2_y_line.text())), 
+                                      (float(self.control_point_3_x_line.text()), float(self.control_point_3_y_line.text())),
+                                      (float(self.control_point_4_x_line.text()), float(self.control_point_4_y_line.text()))]
+
+        # Converts the opacity percentage for the Bezier curve that the user has select in the Curve_box comboBox into a decimal number.
+        user_curve_opacity_alpha_value = round(float(self.Curve_opacity_box.cleanText()) / 100, 2)
+
+        return user_control_point_values, user_curve_opacity_alpha_value
+        
+    ## Enables buttons under the 'Settings for Filling Area for Lines' label based on the user's control points
+    #  and disables all of the widgets related to Bezier curves, selecting client servers, and switching back to the home screen 
+    #  for the 'Mask Feed and Geometry Editing' window.
+    #  @param line_name The curve name of a user-created Bezier curve that is considered a line under Bezier logic
+    #  @param new_control_points The control points of a user-created Bezier curve that is considered a line under Bezier logic
+    #  @opacity_alpha_value The opacity alpha value of a user-created Bezier curve that is considered a line under Bezier
     def enableFillLineButtons(self, line_name, new_control_points, opacity_alpha_value):
 
+        # Disables the comboBoxes and spin box.
         self.Client_projectors_box.setEnabled(False)
         self.Curve_box.setEnabled(False)
         self.Curve_opacity_box.setEnabled(False)
 
-        self.Back_btn.setEnabled(False)
+        # Disables the 'Line Mode' button and resets its counter.
+        self.Line_mode_btn.setEnabled(False)
+        self.line_mode_on = False
+        self.line_mode_click_count_parity = 0
 
+        # Disables the control point buttons and the mouse cursor functionality for the graph. 
+        # Also resets the counter for the control point buttons.
+        self.Control_point_1_btn.setEnabled(False)
+        self.Control_point_2_btn.setEnabled(False)
+        self.Control_point_3_btn.setEnabled(False)
+        self.Control_point_4_btn.setEnabled(False)
+        self.control_point_1_click_cursor_enable = False
+        self.control_point_2_click_cursor_enable = False
+        self.control_point_3_click_cursor_enable = False
+        self.control_point_4_click_cursor_enable = False
+        self.control_point_1_click_count_parity = 0
+        self.control_point_2_click_count_parity = 0
+        self.control_point_3_click_count_parity = 0
+        self.control_point_4_click_count_parity = 0
+
+        # Disables the line edit fields for the control points.
         self.control_point_1_x_line.setEnabled(False)
         self.control_point_1_y_line.setEnabled(False)
         self.control_point_2_x_line.setEnabled(False)
@@ -487,56 +550,42 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.control_point_4_x_line.setEnabled(False)
         self.control_point_4_y_line.setEnabled(False)
 
+        # Disables the ability to edit, add, and remove Bezier curves on the mask graph.
+        self.Set_curve_btn.setEnabled(False)
         self.Add_curve_btn.setEnabled(False)
         self.Remove_curve_btn.setEnabled(False)
 
-        self.Control_point_1_btn.setEnabled(False)
-        self.Control_point_2_btn.setEnabled(False)
-        self.Control_point_3_btn.setEnabled(False)
-        self.Control_point_4_btn.setEnabled(False)
-
-        self.control_point_1_click_cursor_enable = False
-        self.control_point_2_click_cursor_enable = False
-        self.control_point_3_click_cursor_enable = False
-        self.control_point_4_click_cursor_enable = False
-
-        self.control_point_1_click_count_parity = 0
-        self.control_point_2_click_count_parity = 0
-        self.control_point_3_click_count_parity = 0
-        self.control_point_4_click_count_parity = 0
-
-        self.Line_mode_btn.setEnabled(False)
-        self.line_mode_on = False
-        self.line_mode_click_count_parity = 0
-        
-        self.Set_curve_btn.setEnabled(False)
-
-        self.Curve_box.setEnabled(False)
+        # Disables the 'Back' button to keep the user on the 'Mask Feed and Geometry Editing' window.
+        self.Back_btn.setEnabled(False)
 
         self.line_control_point_name = line_name
         self.line_control_point_1 = new_control_points[0]
         self.line_control_point_4 = new_control_points[3]
-
         self.line_opacity_alpha_value = opacity_alpha_value
 
+        # Disables the 'Above Line' and 'Below Line' buttons if the user's inputs for control points 1 and 4 are at the same height.
         if self.line_control_point_1[1] == self.line_control_point_4[1]:
             self.Left_line_btn.setEnabled(False)
             self.Right_line_btn.setEnabled(False)
             self.Above_line_btn.setEnabled(True)
             self.Below_line_btn.setEnabled(True)
 
+        # Disables the 'Left of Line' and 'Right of Line' buttons if the user's inputs for control points 1 and 4 are at the same width.
         elif self.line_control_point_1[0] == self.line_control_point_4[0]:
             self.Left_line_btn.setEnabled(True)
             self.Right_line_btn.setEnabled(True)
             self.Above_line_btn.setEnabled(False)
             self.Below_line_btn.setEnabled(False)
         
+        # Enables all buttons under the 'Settings for Filling Area for Lines' label if the user's inputs for control points 1 and 4 are not at the same height and width/.
         else:
             self.Left_line_btn.setEnabled(True)
             self.Right_line_btn.setEnabled(True)
             self.Above_line_btn.setEnabled(True)
             self.Below_line_btn.setEnabled(True)
     
+    ## Creates a list of xy coordinates for filling in the area between the left side of the projection screen and a user-created Bezier curve that considered a line
+    #  once the user presses on the 'Left of Line' button. 
     def fillLineAreaLeft(self):
         if self.line_control_point_1[1] == 0:  
             control_points_line_area = [(0.0, 0.0), 
@@ -590,6 +639,8 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
             
+    ## Creates a list of xy coordinates for filling in the area between the right side of the projection screen and a user-created Bezier curve that considered a line
+    #  once the user presses on the 'Right of Line' button.
     def fillLineAreaRight(self):
         if self.line_control_point_1[1] == 0:
             control_points_line_area = [(float(self.window_width), 0.0),  
@@ -643,6 +694,8 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
 
+    ## Creates a list of xy coordinates for filling in the area between the top side of the projection screen and a user-created Bezier curve that considered a line
+    #  once the user presses on the 'Above Line' button.
     def fillLineAreaAbove(self):
         if self.line_control_point_1[0] == 0.0:
             control_points_line_area = [(0.0, float(self.window_height)), 
@@ -697,6 +750,8 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
 
+    ## Creates a list of xy coordinates for filling in the area between the bottom side of the projection screen and a user-created Bezier curve that considered a line
+    #  once the user presses on the 'Below Line' button.
     def fillLineAreaBelow(self):
         if self.line_control_point_1[0] == 0.0:
             control_points_line_area = [(0.0, 0.0), 
@@ -750,23 +805,36 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
             
+    ## Adds a list of xy coordinates to the line_area_points dictionary and adds a PathPatch object to the line_area_shapes dictionary in order to
+    #  plot and fill in the area between one of the sides of the projection screen and a user-created Bezier curve that is considered a line.
+    #  @param control_points_line_area The control points for filling in an area between one of the sides of the projection screen and a user-created Bezier curve that is considered a line 
     def makeFillArea(self, control_points_line_area):
 
+            # Disables all of the buttons under the 'Settings for Filling Area for Lines' label.
             self.Left_line_btn.setEnabled(False)
             self.Right_line_btn.setEnabled(False)
             self.Above_line_btn.setEnabled(False)
             self.Below_line_btn.setEnabled(False)
 
+            # Updates the line_area_points and line_area_shapes dictionaries based on the list of xy coordinates for filling in an area of the projection screen
+            # through a user-created Bezier curve that is considered a line.
             self.line_area_points[self.line_control_point_name] = [control_points_line_area, self.line_opacity_alpha_value]
             self.line_area_shapes[self.line_control_point_name] = PathPatch(Path(control_points_line_area, [Path.MOVETO, Path.LINETO, Path.LINETO, Path.LINETO, Path.LINETO]), transform=self.axes.transData)
 
+            # Redraws the canvas in order to show the line area shape that was created by the user.  
             self.redrawCanvas()
 
+            # Reactivates all of the buttons related to Bezier curves, client servers, and switching windows within the GUI. 
             self.Client_projectors_box.setEnabled(True)
             self.Curve_box.setEnabled(True)
             self.Curve_opacity_box.setEnabled(True)
 
-            self.Back_btn.setEnabled(True)
+            self.Line_mode_btn.setEnabled(True)
+
+            self.Control_point_1_btn.setEnabled(True)
+            self.Control_point_2_btn.setEnabled(True)
+            self.Control_point_3_btn.setEnabled(True)
+            self.Control_point_4_btn.setEnabled(True)
 
             self.control_point_1_x_line.setEnabled(True)
             self.control_point_1_y_line.setEnabled(True)
@@ -777,95 +845,104 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
             self.control_point_4_x_line.setEnabled(True)
             self.control_point_4_y_line.setEnabled(True)
 
-            self.Line_mode_btn.setEnabled(True)
-
+            self.Set_curve_btn.setEnabled(True)
             self.Add_curve_btn.setEnabled(True)
             self.Remove_curve_btn.setEnabled(True)
 
-            self.Control_point_1_btn.setEnabled(True)
-            self.Control_point_2_btn.setEnabled(True)
-            self.Control_point_3_btn.setEnabled(True)
-            self.Control_point_4_btn.setEnabled(True)
+            self.Back_btn.setEnabled(True)
 
-            self.Set_curve_btn.setEnabled(True)
+    ## Deletes the Bezier curve that the user has select in the Curve_box comboBox and updates the names of all curves after the Bezier curve that the user has selected.
+    #  This happens once the user presses the 'Remove curve' button.
+    def removeCurve(self):
 
-            self.Curve_box.setEnabled(True)
+        # Saves the number and name of the Bezier curve that the user has select in the Curve_box comboBox to remove.
+        removed_curve_number = int(str.split(self.Curve_box.currentText(), ' ')[1])
+        removed_curve_name = self.Curve_box.currentText()
 
-    def removeCurveClicked(self):
+        # Saves the number of user-created Bezier curves before removing the Bezier curve.
+        total_curves_before_removal = len(self.bezier_curves)
 
-        if self.Curve_box.currentText() == 'No Curves':
-            return
-        else:
-            
-            removed_curve_number = int(str.split(self.Curve_box.currentText(), ' ')[1])
-            removed_curve_key_name = 'Curve ' + str(removed_curve_number)
+        # Updates the names of Bezier curves that are after the Bezier curve that the user has select in the Curve_box comboBox to remove.
+        # This happens only if the user chooses to remove a Bezier curve that is not at the end of the dictionaries.
+        if removed_curve_number < total_curves_before_removal:
+            changed_curves = []
+            index = removed_curve_number + 1
 
-            total_curves_before_removal = len(self.bezier_curves)
+            # Creates a list of new curve names for all Bezier curves that are after the Bezier curve that the user has select in the Curve_box comboBox to remove.
+            while index <= total_curves_before_removal:
+                changed_curves.append('Curve ' + str(index))
+                index = index + 1
 
-            if removed_curve_number < total_curves_before_removal:
-                changed_curves = []
-                index = removed_curve_number + 1
-
-                while index <= total_curves_before_removal:
-                    changed_curves.append('Curve ' + str(index))
-                    index = index + 1
-
-                if removed_curve_key_name in self.line_area_points and len(self.line_area_points) == 1 and len(self.control_points_list) == 1:
-                    del self.control_points_list[removed_curve_key_name]
-                    del self.bezier_curves[removed_curve_key_name]
-                    del self.line_area_points[removed_curve_key_name]
-                    del self.line_area_shapes[removed_curve_key_name]
-
-                else:
-                    for changed_curve in changed_curves:
-                        new_curve_number = int(str.split(changed_curve, ' ')[1]) - 1
-
-                        if new_curve_number == removed_curve_number:
-                            if removed_curve_key_name in self.line_area_points:
-                                del self.control_points_list[removed_curve_key_name]
-                                del self.bezier_curves[removed_curve_key_name]
-                                del self.line_area_points[removed_curve_key_name]
-                                del self.line_area_shapes[removed_curve_key_name]
-                        
-                        self.control_points_list['Curve ' + str(new_curve_number)] = self.control_points_list[changed_curve]
-                        del self.control_points_list[changed_curve]
-
-                        self.bezier_curves['Curve ' + str(new_curve_number)] = self.bezier_curves[changed_curve]
-                        del self.bezier_curves[changed_curve]
-                        
-                        if changed_curve in self.line_area_points:
-                            self.line_area_points['Curve ' + str(new_curve_number)] = self.line_area_points[changed_curve]
-                            del self.line_area_points[changed_curve]
-
-                            self.line_area_shapes['Curve ' + str(new_curve_number)] = self.line_area_shapes[changed_curve]
-                            del self.line_area_shapes[changed_curve]
-                
-                self.Curve_box.clear()
-                self.Curve_box.addItems(list(self.bezier_curves.keys()))
+            # Removes the Bezier curve from all dictionaries if the Bezier curve that the user has select in the Curve_box comboBox to remove is considered a line under Bezier logic.
+            if removed_curve_name in self.line_area_points and len(self.line_area_points) == 1 and len(self.control_points_list) == 1:
+                del self.control_points_list[removed_curve_name]
+                del self.bezier_curves[removed_curve_name]
+                del self.line_area_points[removed_curve_name]
+                del self.line_area_shapes[removed_curve_name]
 
             else:
-                del self.control_points_list[self.Curve_box.currentText()]
-                del self.bezier_curves[self.Curve_box.currentText()]
+                # Iterates through the list of new curve names.
+                for changed_curve in changed_curves:
+                    new_curve_number = int(str.split(changed_curve, ' ')[1]) - 1
 
-                if self.Curve_box.currentText() in self.line_area_points:
-                    del self.line_area_points[self.Curve_box.currentText()]
-                    del self.line_area_shapes[self.Curve_box.currentText()]
+                    # Deletes a Bezier curve from all dictionaries if its new curve number matches the curve number that Bezier curve that the user has selected
+                    # to remove and if the Bezier curve is considered a line under Bezier logic.
+                    if new_curve_number == removed_curve_number:
+                        if removed_curve_name in self.line_area_points:
+                            del self.control_points_list[removed_curve_name]
+                            del self.bezier_curves[removed_curve_name]
+                            del self.line_area_points[removed_curve_name]
+                            del self.line_area_shapes[removed_curve_name]
+                    
+                    # Moves each value within the dictionaries to the previous key within the dictionaries.
+                    self.control_points_list['Curve ' + str(new_curve_number)] = self.control_points_list[changed_curve]
+                    del self.control_points_list[changed_curve]
 
-                if not self.bezier_curves.keys():
-                    self.Curve_box.addItem('No Curves')
+                    self.bezier_curves['Curve ' + str(new_curve_number)] = self.bezier_curves[changed_curve]
+                    del self.bezier_curves[changed_curve]
+                    
+                    if changed_curve in self.line_area_points:
+                        self.line_area_points['Curve ' + str(new_curve_number)] = self.line_area_points[changed_curve]
+                        del self.line_area_points[changed_curve]
 
-                    self.Set_curve_btn.setEnabled(False)
-                    self.Remove_curve_btn.setEnabled(False)
-
-                self.Curve_box.removeItem(self.Curve_box.currentIndex())
+                        self.line_area_shapes['Curve ' + str(new_curve_number)] = self.line_area_shapes[changed_curve]
+                        del self.line_area_shapes[changed_curve]
             
-            self.redrawCanvas()
-            self.SendInfo()
+            self.Curve_box.clear()
+            self.Curve_box.addItems(list(self.bezier_curves.keys()))
 
-    def selectedCurveChanged(self):
+        # Removes the Bezier curve at the end of the dictionaries if the user has select in the Curve_box comboBox to remove this Bezier curve.
+        else:
+            del self.control_points_list[self.Curve_box.currentText()]
+            del self.bezier_curves[self.Curve_box.currentText()]
+
+            if self.Curve_box.currentText() in self.line_area_points:
+                del self.line_area_points[self.Curve_box.currentText()]
+                del self.line_area_shapes[self.Curve_box.currentText()]
+
+            # Creates a new item on the comboBox list and deactivates the 'Set curve' and 'Remove curve' buttons 
+            # if the user removes the only Bezier curve left in the dictionaries.
+            if not self.bezier_curves.keys():
+                self.Curve_box.addItem('No Curves')
+
+                self.Set_curve_btn.setEnabled(False)
+                self.Remove_curve_btn.setEnabled(False)
+
+            self.Curve_box.removeItem(self.Curve_box.currentIndex())
         
+        self.redrawCanvas()
+        self.SendInfo()
+
+    ## Sets the values of the line edit fields and the curve opacity spin box to the Bezier curve that the user has select in the Curve_box comboBox anytime the value
+    #  within Curve_box comboBox changes.    
+    def selectedCurveChanged(self):
+
+        # Does not set the values of the line edit fields and the curve opacity spin box if there is not a curve under the Curve_box spin box.
         if self.Curve_box.currentText() == 'No Curves' or self.Curve_box.currentText() == '':
             return
+
+        # Sets the line edit fields and curve opacity based on the curve that the Curve_box comboBox changed into.
+        # This also redraws the mask graph.
         else:
             selected_curve_control_points = self.control_points_list[self.Curve_box.currentText()][0]
             selected_curve_opacity_alpha_value = self.control_points_list[self.Curve_box.currentText()][1]
@@ -883,106 +960,166 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 
             self.redrawCanvas()        
 
+    ## Enables and disables mouse cursor functionality for control point 1 based on how many times the user has pressed on the 'Control Point 1' button. 
     def controlPoint1Clicked(self):
         
         self.control_point_1_click_count_parity = self.control_point_1_click_count_parity + 1
 
+        # Reanables Control Points 2, 3, and 4 buttons and resets the counter for the number of times that the 'Control Point 1' butotn has been clicked
+        # if the user has pressed on the 'Control Point 1' button twice. 
         if self.control_point_1_click_count_parity % 2 == 0:            
             self.Control_point_2_btn.setEnabled(True)
             self.Control_point_3_btn.setEnabled(True)
             self.Control_point_4_btn.setEnabled(True)
             self.control_point_1_click_cursor_enable = False
             self.control_point_1_click_count_parity == 0
+
+        # Disables Control Points 2, 3, and 4 buttons if the user has only clicked on the 'Control Point 1' button once.
         else:
             self.Control_point_2_btn.setEnabled(False)
             self.Control_point_3_btn.setEnabled(False)
             self.Control_point_4_btn.setEnabled(False)
             self.control_point_1_click_cursor_enable = True
     
+    ## Enables and disables mouse cursor functionality for control point 2 based on how many times the user has pressed on the 'Control Point 2' button. 
     def controlPoint2Clicked(self):
 
         self.control_point_2_click_count_parity = self.control_point_2_click_count_parity + 1
 
+        # Reanables Control Points 1, 3, 4, and 'Line Mode' buttons and resets the counter for the number of times that the 'Control Point 2' button has been clicked
+        # if the user has pressed on the 'Control Point 2' button twice.
         if self.control_point_2_click_count_parity % 2 == 0:
             self.Control_point_1_btn.setEnabled(True)
             self.Control_point_3_btn.setEnabled(True)
             self.Control_point_4_btn.setEnabled(True)
+            self.Line_mode_btn.setEnabled(True)
             self.control_point_2_click_cursor_enable = False
             self.control_point_2_click_count_parity == 0
+
+        # Disables Control Points 1, 3, 4, and 'Line Mode' buttons if the user has only clicked on the 'Control Point 2' button once.
         else:
             self.Control_point_1_btn.setEnabled(False)
             self.Control_point_3_btn.setEnabled(False)
             self.Control_point_4_btn.setEnabled(False)
             self.control_point_2_click_cursor_enable = True
 
+            self.Line_mode_btn.setEnabled(False)
+            self.line_mode_on = False
+            self.line_mode_click_count_parity = 0
+            
+    ## Enables and disables mouse cursor functionality for control point 3 based on how many times the user has pressed on the 'Control Point 3' button. 
     def controlPoint3Clicked(self):
 
         self.control_point_3_click_count_parity = self.control_point_3_click_count_parity + 1
 
+        # Reanables Control Points 1, 2, 4, and 'Line Mode' buttons and resets the counter for the number of times that the 'Control Point 3' button has been clicked
+        # if the user has pressed on the 'Control Point 3' button twice. 
         if self.control_point_3_click_count_parity % 2 == 0:
             self.Control_point_1_btn.setEnabled(True)
             self.Control_point_2_btn.setEnabled(True)
-            self.Control_point_4_btn.setEnabled(True)        
+            self.Control_point_4_btn.setEnabled(True)  
+            self.Line_mode_btn.setEnabled(True)      
             self.control_point_3_click_cursor_enable = False
             self.control_point_3_click_count_parity == 0
+        
+        # Disables Control Points 1, 2, 4, and 'Line Mode' buttons if the user has only clicked on the 'Control Point 3' button once.
         else:
             self.Control_point_1_btn.setEnabled(False)
             self.Control_point_2_btn.setEnabled(False)
             self.Control_point_4_btn.setEnabled(False)
             self.control_point_3_click_cursor_enable = True
+
+            self.Line_mode_btn.setEnabled(False)
+            self.line_mode_on = False
+            self.line_mode_click_count_parity = 0
     
+    ## Enables and disables mouse cursor functionality for control point 4 based on how many times the user has pressed on the 'Control Point 4' button.  
     def controlPoint4Clicked(self):
 
         self.control_point_4_click_count_parity = self.control_point_4_click_count_parity + 1
 
+        # Reanables Control Points 1, 2, and 3 buttons and resets the counter for the number of times that the 'Control Point 4' button has been clicked 
+        # if the user has pressed on the 'Control Point 4' button twice. 
         if self.control_point_4_click_count_parity % 2 == 0:
             self.Control_point_1_btn.setEnabled(True)
             self.Control_point_2_btn.setEnabled(True)
             self.Control_point_3_btn.setEnabled(True)        
             self.control_point_4_click_cursor_enable = False
             self.control_point_4_click_count_parity == 0
+
+        # Disables Control Points 1, 2, and 3 buttons if the user has only clicked on the 'Control Point 4' button once.
         else:
             self.Control_point_1_btn.setEnabled(False)
             self.Control_point_2_btn.setEnabled(False)
             self.Control_point_3_btn.setEnabled(False)
             self.control_point_4_click_cursor_enable = True
 
-    def contrastCurveClicked(self):
+    ## Dictates whether the Bezier curve (and its associated line area shape if it exists) that the user has select in the Curve_box comboBox
+    #  appears in a black or red color on the mask graph based on the number of times the user has pressed on the 'Show Selected Curve in Contrasting Color' button.
+    def showContrastCurve(self):
 
         self.contrast_curve_click_count_parity = self.contrast_curve_click_count_parity + 1
 
+        # Makes the Bezier curve (and its associated line area shape if it exists) that the user has select in the Curve_box comboBox 
+        # appear in a black color and resets the counter for the number of times that the 'Show Selected Curve in Contrasting Color' button has been clicked
+        # if the user has pressed on the 'Show Selected Curve in Contrasting Color' button twice.
         if self.contrast_curve_click_count_parity % 2 == 0:
             self.contrast_curve = False
             self.contrast_curve_click_count_parity = 0
+
+        # Makes the Bezier curve (and its associated line area shape if it exists) that the user has select in the Curve_box comboBox 
+        # appear in a red color if the user has only pressed on the 'Show Selected Curve in Contrasting Color' button once.
         else:
             self.contrast_curve = True
 
         self.redrawCanvas()
 
+    ## Dictates whether the areas of the Bezier curves and the line area shapes appear on the mask graph based on how many times the user has pressed the
+    # 'Show Areas' button.
     def showAreas(self):
 
         self.show_areas_click_count_parity = self.show_areas_click_count_parity + 1
 
+        # Makes the area of Bezier curves and line area shapes visible to the user and resets the counter for the number of times the 'Show Areas' button
+        # has been clicked if the user has clicked on the 'Show Areas' button twice.
         if self.show_areas_click_count_parity % 2 == 0:
             self.show_areas = False
             self.show_areas_click_count_parity = 0
+
+        # Makes the area of Bezier curves and line area shapes nonvisible to the user if the user has only clicked on the 'Show Areas' button once.
         else:
             self.show_areas = True
         self.redrawCanvas()
     
+    ## Dictates whether the control points of the Bezier curve that the user has selected in the Curve_box comboBox appears in a red color on the mask graph
+    #  based on how many times the user has pressed on the 'Show Control Points' button.
     def showControlPoints(self):
 
         self.show_control_points_click_count_parity = self.show_control_points_click_count_parity + 1
 
+        # Makes the control points of the Bezier curve that the user has selected in the Curve_box comboBox appear in a red color and resets the counter
+        # for the number of times the user has clicked on the 'Show Control Points' button if the user has pressed on the 'show Control Points' button twice.
         if self.show_control_points_click_count_parity % 2 == 0:
             self.show_control_points = False
             self.show_control_points_click_count_parity = 0
+        
+        # Makes the control points of the Bezier curve that the user has selected in the Curve_box comboBox nonvisible to the user.
         else:
             self.show_control_points = True
         self.redrawCanvas()
     
+    ##  Puts the xy coordinates that the user clicked on within the mask graph to the line edit fields of the control point button that the user has clicked on.
+    #   @param cursor_x The x coordinate of the user's mouse cursor
+    #   @param cursor_y The y coordinate of the user's mouse cursor
+    #   @param x_line_edit The x line edit field of the control point button that the user has clicked on
+    #   @param x_line_edit The y line edit field of the control point button that the user has clicked on
     def setMouseCursorCoordinates(self, cursor_x, cursor_y, x_line_edit, y_line_edit):
+        
+        # Checks if the user's mouse cursor was on the mask graph when the user clicked on the left mouse button with mouse cursor functionality turned on.
         if cursor_x != None and cursor_y != None:
+
+            # Rounds the user's mouse cursor xy coordinates to the closest blue dashed line if the user clicked close enough to 
+            # one of the borders of the projection screen. 
             if abs(cursor_x - 0) <= 10.0 and cursor_y >= 0 and cursor_y <= self.window_height:
                 x_line_edit.setText('0.0')
                 y_line_edit.setText(str(round(cursor_y, 2)))
@@ -1007,47 +1144,68 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
             elif abs(cursor_x - self.window_width) <= 10.0 and abs(cursor_y - self.window_height) <= 10.0:
                 x_line_edit.setText(str(self.window_width))
                 y_line_edit.setText(str(self.window_height))
+
+            # Rounds the user's mouse cursor by two decimal places if the user did not click near the borders of the projection screen.
             else:
                 x_line_edit.setText(str(round(cursor_x, 2)))
                 y_line_edit.setText(str(round(cursor_y, 2)))
 
+    ## Handles the mouse cursor functionality for editting Bezier curves once the user has clicked on one of the four control point buttons. 
     def leftMouseClicked(self, event):
+
+        # Takes the xy coordinates of the user's mouse cursor if the user presses on the left nouse button.
         if event.button == MouseButton.LEFT:
+
+            # Handles the mouse cursor functionality for the 'Control Point 1' button.
             if self.control_point_1_click_cursor_enable:
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_1_x_line, self.control_point_1_y_line)
                 self.setCurve()
 
+            # Handles the mouse cursor functionality for the 'Control Point 2' button.
             elif self.control_point_2_click_cursor_enable:
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_2_x_line, self.control_point_2_y_line)
                 self.setCurve()
 
+            # Handles the mouse cursor functionality for the 'Control Point 3' button.
             elif self.control_point_3_click_cursor_enable:
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_3_x_line, self.control_point_3_y_line)
                 self.setCurve()
             
+            # Handles the mouse cursor functionality for the 'Control Point 4' button.
             elif self.control_point_4_click_cursor_enable:
                 self.setMouseCursorCoordinates(event.xdata, event.ydata, self.control_point_4_x_line, self.control_point_4_y_line)
                 self.setCurve()
 
+    ## Dictates whether to enable or disable the ability to make control points 2 and 3 equal to control point 1 based on how many times the user
+    #  presses on the 'Line Mode' button.
     def lineModeClicked(self):
-
-        if self.control_point_1_click_cursor_enable == True or self.control_point_4_click_cursor_enable == True:
-            return
         
         self.line_mode_click_count_parity = self.line_mode_click_count_parity + 1
 
+        # Enables the line edit fields for control points 2 and 3, resets line mode to be off, and resets the counter for the number of times 'Line Mode'
+        # has been clicked if the user clicks on the 'Line Mode' button twice.
         if self.line_mode_click_count_parity % 2 == 0:
-            self.Control_point_2_btn.setEnabled(True)
             self.control_point_2_x_line.setEnabled(True)
             self.control_point_2_y_line.setEnabled(True)
 
-            self.Control_point_3_btn.setEnabled(True)
             self.control_point_3_x_line.setEnabled(True)
             self.control_point_3_y_line.setEnabled(True)
 
             self.line_mode_on = False
             self.line_mode_click_count_parity = 0
-        
+
+            # Disables the control points 2 and 3 buttons if the user still has either the 'Control Point 1' or 'Control Point 4' buttons to be on.
+            if self.control_point_1_click_cursor_enable or self.control_point_4_click_cursor_enable:
+                self.Control_point_2_btn.setEnabled(False)
+                self.Control_point_3_btn.setEnabled(False)
+
+            # Enables the control points 2 and 3 buttons if the user still has neither the 'Control Point 1' or 'Control Point 4' buttons to be on.
+            else:
+                self.Control_point_2_btn.setEnabled(True)
+                self.Control_point_3_btn.setEnabled(True)
+
+        # Disables the buttons and line edit fields for control points 2 and 3 and sets the line edit fields of control points 2 and 3 equal to the
+        # line edit fields of control point 1 if the user has only clicked on the 'Line Mode' button once.
         else:
             self.Control_point_2_btn.setEnabled(False)
             self.control_point_2_x_line.setEnabled(False)
@@ -1065,11 +1223,15 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 
             self.line_mode_on = True
 
+    ## Sets the x line edit fields of Control Points 2 and 3 equal to the x line edit field of Control Point 1 if the user has clicked
+    #  on the 'Line Mode' button to be on and the value within the x line edit field of Control Point 1 changes.
     def controlPoint1XChanged(self):
         if self.line_mode_on == True:
             self.control_point_2_x_line.setText(self.control_point_1_x_line.text())
             self.control_point_3_x_line.setText(self.control_point_1_x_line.text())
-    
+
+    ## Sets the y line edit fields of Control Points 2 and 3 equal to the y line edit field ofControl Point 1 if the user has clicked
+    #  on the 'Line Mode' button to be on and the value within the y line edit field of Control Point 1 changes.
     def controlPoint1YChanged(self):
         if self.line_mode_on == True:
             self.control_point_2_y_line.setText(self.control_point_1_y_line.text())
@@ -1157,8 +1319,8 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.Curve_box.clear()
         self.Curve_box.addItems(list(self.bezier_curves.keys()))
         self.setTextBoxes()    
-        self.axes.set_xlim((0 - self.boundary_size * 3, self.window_width + self.boundary_size * 3))
-        self.axes.set_ylim((0 - self.boundary_size * 3, self.window_height + self.boundary_size * 3))
+        self.axes.set_xlim((0 - self.boundary_size, self.window_width + self.boundary_size))
+        self.axes.set_ylim((0 - self.boundary_size, self.window_height + self.boundary_size))
         self.axes.grid(color = 'k')
         self.canvas.draw() 
 
