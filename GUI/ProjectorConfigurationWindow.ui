@@ -52,34 +52,6 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QLabel" name="label_5">
-         <property name="minimumSize">
-          <size>
-           <width>290</width>
-           <height>37</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>290</width>
-           <height>37</height>
-          </size>
-         </property>
-         <property name="font">
-          <font>
-           <family>Leelawadee UI</family>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(163, 163, 163);</string>
-         </property>
-         <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Projector Configuration&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QListWidget" name="Client_list">
          <property name="minimumSize">
           <size>

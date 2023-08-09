@@ -1305,7 +1305,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                 x_line_edit.setText(str(round(cursor_x, 2)))
                 y_line_edit.setText(str(round(cursor_y, 2)))
 
-    ## Handles the mouse cursor functionality for editting Bezier curves once the user has clicked on one of the four control point buttons. 
+    ## Handles the mouse cursor functionality for editing Bezier curves once the user has clicked on one of the four control point buttons. 
     def leftMouseClicked(self, event):
 
         # Takes the xy coordinates of the user's mouse cursor if the user presses on the left nouse button.
