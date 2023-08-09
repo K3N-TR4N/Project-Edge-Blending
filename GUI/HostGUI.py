@@ -18,6 +18,8 @@ matplotlib.use('Qt5Agg')
 import pickle
 
 # This file contains all the functionalities of the widgets between the windows.
+
+## Represents the 'Planetarium Edge Blend' window for the host GUI.
 class MainWindow(QMainWindow):
     
     # Loads the main window by default when the user boots up the host GUI.
