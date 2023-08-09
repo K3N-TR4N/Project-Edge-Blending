@@ -56,9 +56,9 @@ background-color: rgb(11, 11, 11);</string>
        </widget>
       </item>
       <item row="1" column="0">
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="switch_window_buttons_layout_1">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QHBoxLayout" name="switch_window_buttons_layout_2">
           <item>
            <spacer name="horizontalSpacer_3">
             <property name="orientation">
@@ -76,7 +76,7 @@ background-color: rgb(11, 11, 11);</string>
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="GeometryEdit_btn">
+           <widget class="QPushButton" name="MaskFeedGeometryEdit_btn">
             <property name="minimumSize">
              <size>
               <width>400</width>

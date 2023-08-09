@@ -267,17 +267,21 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     ## Retrieves all configured projectors' names and IP addresses.
     # Reads the client_ip.txt file on the host computer containing all of the configured projectors' information and stores that information into a dictionary.
     def retrieveProjectors(self):
-        client_servers_info_file = open('client_ip.txt', 'r')
+        try:
+            client_servers_info_file = open('client_ip.txt', 'r')
+            # Reads each line from the text line and removes the newline character before creating a key value pair in the client_servers_IP_addresses dictionary.
+            for line in client_servers_info_file:
+                client_server_info = str.split(line.removesuffix('\n'), '-')
+                self.client_servers_IP_addresses[client_server_info[0]] = client_server_info[1]
 
-        # Reads each line from the text line and removes the newline character before creating a key value pair in the client_servers_IP_addresses dictionary.
-        for line in client_servers_info_file:
-            client_server_info = str.split(line.removesuffix('\n'), '-')
-            self.client_servers_IP_addresses[client_server_info[0]] = client_server_info[1]
+            client_servers_info_file.close()
 
-        client_servers_info_file.close()
+            # Updates the combo box so that the user can now select each of the configured projectors to view and edit a client projector mask.
+            self.Client_projectors_box.addItems(self.client_servers_IP_addresses.keys())
+        except:
+            f = open("client_ip.txt", "w")
 
-        # Updates the combo box so that the user can now select each of the configured projectors to view and edit a client projector mask.
-        self.Client_projectors_box.addItems(self.client_servers_IP_addresses.keys())
+        
         
     ## Clears the mask graph containing all of Bezier curves for a client projector mask and plots each Bezier curve and its corresponding line area shape again.
     def redrawCanvas(self):
