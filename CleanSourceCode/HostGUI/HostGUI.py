@@ -2,9 +2,9 @@ import sys
 import re
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QDialog, QApplication, QMainWindow, QMessageBox
-from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
-from PyQt5.QtCore import QDataStream, QIODevice
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
+from PyQt5.QtNetwork import QTcpSocket
+from PyQt5.QtCore import QIODevice
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.path import Path
@@ -17,80 +17,129 @@ matplotlib.use('Qt5Agg')
 
 import pickle
 
-# This file contains all the functionalities of the widgets between the windows
+# This file contains all the functionalities of the widgets between the windows.
 
+## Represents the 'Planetarium Edge Blend' window for the host GUI.
 class MainWindow(QMainWindow):
+    
+    # Loads the main window by default when the user boots up the host GUI.
     def __init__(self):
         super(MainWindow, self).__init__()
         loadUi("MainWindow.ui", self)
         widget.setWindowTitle('Planetarium Edge Blend')
-        self.GeometryEdit_btn.clicked.connect(self.gotoMaskFeedAndGeometryEditingWindow)
+        self.MaskFeedGeometryEdit_btn.clicked.connect(self.gotoMaskFeedAndGeometryEditingWindow)
         self.ProjectorConfig_btn.clicked.connect(self.gotoProjectorConfigurationWindow)
 
+    # Switches to the 'Mask Feed and Geometry Editing - Planetarium Edge Blend' window if the user presses on the 
+    # 'Mask Feed and Geometry Editing' button on the main window.
     def gotoMaskFeedAndGeometryEditingWindow(self):
         geometryEdit = MaskFeedAndGeometryEditingWindow()
         widget.setWindowTitle('Mask Feed and Geometry Editing - Planetarium Edge Blend')
         widget.addWidget(geometryEdit)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
+    # Switches to the 'Projector Configuration - Planetarium Edge Blend' window if the user presses on the
+    #'Projector Configuration - Planetarium Edge Blend' button on the main window.
     def gotoProjectorConfigurationWindow(self):
         projectorConfig = ProjectorConfigurationWindow()
         widget.setWindowTitle('Projector Configuration - Planetarium Edge Blend')
         widget.addWidget(projectorConfig)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
+'''
+MASK FEED AND GEOMETRY EDITING
+'''
+
+## Represents the 'Mask Feed and Geometry Editing - Planetarium Edge Blend' window for the host GUI.
 class MaskFeedAndGeometryEditingWindow(QMainWindow):
     def __init__(self):
         super(MaskFeedAndGeometryEditingWindow, self).__init__()
         loadUi("MaskFeedAndGeometryEditingWindow.ui", self)
 
+        ## The width of the client projector screen that the user has selected to view
         self.window_width = 1920
+
+        ## The height of the client projector screen that the user has selected to view
         self.window_height = 1200
+
+        ## Size of the area outside of the blue dashed lines on the mask graph.
         self.boundary_size = 300
+
+        ## X coordinates of plotting the blue dashed lines on the mask graph.
         self.boundaries_x = [0, 0, self.window_width, self.window_width, 0]
+
+        ## Y coordinates of plotting the blue dashed lines on the mask graph.
         self.boundaries_y = [self.window_height, 0, 0, self.window_height, self.window_height]
 
+        ## Determines whether to register the user's mouse cursor coordinates for control point 1.
         self.control_point_1_click_cursor_enable = False
+
+        ## Determines whether to register the user's mouse cursor coordinates for control point 2.
         self.control_point_2_click_cursor_enable = False
+
+        ## Determines whether to register the user's mouse cursor coordinates for control point 3.
         self.control_point_3_click_cursor_enable = False
+
+        ## Determines whether to register the user's mouse cursor coordinates for control point 4.
         self.control_point_4_click_cursor_enable = False
 
+        ## Counter for how many times the user has pressed on the 'Control Point 1' button.
         self.control_point_1_click_count_parity = 0
+
+        ## Counter for how many times the user has pressed on the 'Control Point 2' button.
         self.control_point_2_click_count_parity = 0
+
+        ## Counter for how many times the user has pressed on the 'Control Point 3' button.
         self.control_point_3_click_count_parity = 0
+
+        ## Counter for how many times the user has pressed on the 'Control Point 4' button.
         self.control_point_4_click_count_parity = 0
 
+        ## Counter for how many times the user has pressed on the 'Line Mode' button.
         self.line_mode_click_count_parity = 0
+
+        ## Dictates whether line mode is on.
         self.line_mode_on = False
 
+        ## Counter for how many times the user has pressed on the 'Show Selected Curve in Contrasting Color' button.
         self.contrast_curve_click_count_parity = 0
+
+        ## Dictates whether to show the Bezier curve that the user has selected in a red color.
         self.contrast_curve = False
 
+        ## Counter for how many times the user has pressed on the 'Show Areas' button.
         self.show_areas_click_count_parity = 0
+
+        ## Dictates whether to show the areas of all user-created Bezier curves.
         self.show_areas = False
 
+        ## Counter for how many times the user has pressed on the 'Show Control Points' button.
         self.show_control_points_click_count_parity = 0
+
+        ## Dictates whether to show the control points of the Bezier curve that the user has selected.
         self.show_control_points = False
 
-        #####################################################################
-
+        # Creates the mask graph.
         figure, self.axes = plt.subplots()
         self.canvas = FigureCanvasQTAgg(figure)
-        self.axes.set_xlim((0 - self.boundary_size, self.window_width + self.boundary_size))
-        self.axes.set_ylim((0 - self.boundary_size, self.window_height + self.boundary_size))
-        ## Dictionary containing the control points used for bezier curves.
+
+        # Connects the left mouse button signal to the mask graph and puts the mask graph onto the window.
+        plt.connect('button_press_event', self.leftMouseClicked)
+        self.Mask_graph_layout.addWidget(self.canvas)
+        
+        ## Dictionary containing the control points used for Bezier curves.
         # The exact format of the control_points_list is {"Curve number" : [[control points], opacity]}.
         # Curve number is the associated number of the curve. 
         # [control points] is an array containing all the control points for the curve. 
         # opacity is a value from 0 to 1 containing the opacity value used for drawing the area of the curve.
         self.control_points_list = {}
 
-        ## Dictionary containing generated bezier curves based on the control points.
+        ## Dictionary containing generated Bezier curves based on the control points.
         self.bezier_curves = {}
 
-        ## Dictionary containing "line" type bezier curves.
-        # Lines are defined as bezier curves with only two unique control points. The other two control points have equal coordinates to either of the unique control points.
-        # The reason lines are defined separately from normal bezier curves is due to the way we draw areas pertaining to lines, which has to be done more manually.
+        ## Dictionary containing "line" type Bezier curves.
+        # Lines are defined as Bezier curves with only two unique control points. The other two control points have equal coordinates to either of the unique control points.
+        # The reason lines are defined separately from normal Bezier curves is due to the way we draw areas pertaining to lines, which has to be done more manually.
         self.line_area_points = {}
 
         ## Dictionary containing the shapes for areas under lines.
@@ -102,16 +151,12 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         ## Port number used for incoming TCP Connections over the local network.
         self.PORT = 64012
 
-
         self.retrieveProjectors()
-
-        plt.connect('button_press_event', self.leftMouseClicked)
-        self.horizontalLayout_1.addWidget(self.canvas)
 
         # Attempt to get info from the first client in the client list.
         try:
             self.GetInfo()
-            # If the info contains at least one bezier curve or line we redraw them on the host for editing.
+            # If the info contains at least one Bezier curve or line we redraw them on the host for editing.
             if (self.control_points_list or self.line_area_points):
                 for pointName, pointValue in self.control_points_list.items():
                     self.bezier_curves[pointName] = PathPatch(Path(pointValue[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
@@ -128,7 +173,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                 selected_curve_opacity_alpha_value = self.control_points_list["Curve 1"][1]
                 self.Curve_opacity_box.setValue(selected_curve_opacity_alpha_value * 100)
 
-            # Sets the axis information for the figure used for bezier curves.
+            # Sets the axis information for the figure used for Bezier curves.
             self.axes.set_title(self.Client_projectors_box.currentText() + ' Mask')
             self.axes.set_xlabel('Screen Width')
             self.axes.set_ylabel('Screen Height')
@@ -160,8 +205,6 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 
         self.axes.grid(color = 'k')
         self.canvas.draw()   
-
-        #####################################################################
 
         self.setTextBoxes()
         
@@ -222,7 +265,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
             self.redrawCanvas()
 
     ## Retrieves all configured projectors' names and IP addresses.
-    # Reads a text file on the host computer containing all of the configured projectors' information and stores that information into a dictionary.
+    # Reads the client_ip.txt file on the host computer containing all of the configured projectors' information and stores that information into a dictionary.
     def retrieveProjectors(self):
         client_servers_info_file = open('client_ip.txt', 'r')
 
@@ -240,7 +283,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     def redrawCanvas(self):
         self.axes.clear()
 
-        # Plots the blue dashed border lines onto the graph.
+        # Plots the blue dashed lines onto the graph.
         self.axes.plot(self.boundaries_x, self.boundaries_y, linestyle = '--', color = 'b')
 
         # Plots the control points for the Bezier curve that the user has select in the Curve_box comboBox in a red color on the mask graph if the user has clicked on the
@@ -253,19 +296,20 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         for curve in self.bezier_curves:
             curve_opacity_alpha_value = self.control_points_list[curve][1]
 
-            # Sets the edge of the current iterating Bezier curve and the area it makes up to a red color if the current iterating Bezier curve matches 
-            # the Bezier curve that the user has selected, the user has clicked on the 'Show Areas' button to be on,
+            # Sets the edge of the current iterating Bezier curve and the area it makes up to a red color if the 
+            # current iterating Bezier curve matches the Bezier curve that the user has selected, 
+            # the user has clicked on the 'Show Areas' button to be on,
             # and the user has clicked on the 'Show Selected Curve in Contrasting Color' button to be on,
             if curve == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == True:
                 self.bezier_curves[curve].set(facecolor = (1, 0, 0, curve_opacity_alpha_value), edgecolor = (1, 0, 0, curve_opacity_alpha_value))
             
-            # Sets only the edge of the current iterating Bezier curve to a red color if the current iterating Bezier curve matches the Bezier curve 
+            # Sets only the edge of the current iterating Bezier curve to a red color if the current iterating Bezier curve matches the Bezier curve
             # that the user has select in the Curve_box comboBox and the user has only clicked on the 'Show Selected Curve in Contrasting Color' button to be on.
             elif curve == self.Curve_box.currentText() and self.contrast_curve == True and self.show_areas == False:
                 self.bezier_curves[curve].set(facecolor = 'None', edgecolor = (1, 0, 0, curve_opacity_alpha_value))
 
-            # Handles the cases where the current iterating Bezier curve does not match the Bezier curve that the user has select in the Curve_box comboBox and when the user
-            # hasn't clicked on the 'Show Selected Curve in Contrasting Color' button to be on.
+            # Handles the cases where the current iterating Bezier curve does not match the Bezier curve that the user has select in the Curve_box comboBox 
+            # and when the user hasn't clicked on the 'Show Selected Curve in Contrasting Color' button to be on.
             else:
 
                 # Sets the edge of the current iterating Bezier curve and the area it makes up to a black color if the user has clicked
@@ -329,7 +373,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     def setCurve(self):      
 
         # Checks whether the values in the line edit fields are valid.
-        # If the values are valid, then the convertUserInputsForCurve() function is called to convert the values.
+        # If the values are valid, then the convertUserInputsForCurve() function is called to convert the user values.
         if self.evaluateLineEditFields() == 'Valid':
             user_control_point_values, user_curve_opacity_alpha_value = self.convertUserInputsForCurve()
 
@@ -359,17 +403,19 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 
         self.redrawCanvas()
         
+        # Disables all buttons, line edit fields, combo boxes, and the spin box until the user chooses which areas of the projection screen to fill if the user edits
+        # a Bezier curve that is considered a line.
         if curve_type == 'line':
             self.enableFillLineButtons(line_name = self.Curve_box.currentText(), new_control_points = user_control_point_values, opacity_alpha_value = user_curve_opacity_alpha_value)
         
         self.SendInfo()
         
-    # Creates a new Bezier curve based on the user's inputs for the line edit fields and opacity spin box and plots it on the mask graph.
+    ## Creates a new Bezier curve based on the user's inputs for the line edit fields and opacity spin box and plots it on the mask graph.
     # This happens once the user clicks on the 'Add new curve' button.
     def addNewCurve(self):
 
         # Checks whether the values in the line edit fields are valid.
-        # If the values are valid, then the convertUserInputsForCurve() function is called to convert the values.
+        # If the values are valid, then the convertUserInputsForCurve() function is called to convert the user's values.
         if self.evaluateLineEditFields() == 'Valid':
             user_control_point_values, user_curve_opacity_alpha_value = self.convertUserInputsForCurve()
 
@@ -382,6 +428,10 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         # Considers the Bezier curve a line if there are only two unique sets of coordinates from the user's inputs for the line edit fields.
         if len(set(user_control_point_values)) == 2:
             curve_type = 'line'
+
+        # Stops the function call if the user's control points do not meet the conditions for valid control point rules depending on the curve type.
+        if self.evaluateControlPoints(user_control_point_values = user_control_point_values, curve_type = curve_type) == 'Invalid':
+            return
 
         # Adds a new key value pair into the control_points_list and bezier_curves dictionaries based on the user's inputs for the line edit fields and spin box. 
         new_bezier_curve_name = 'Curve ' + str(len(self.control_points_list) + 1)
@@ -405,6 +455,8 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         else:
             self.Curve_box.setCurrentText('Curve ' + str(len(self.control_points_list)))
 
+        # Disables all buttons, line edit fields, combo boxes, and the spin box until the user chooses which areas of the projection screen to fill if the user adds
+        # a Bezier curve that is considered a line.
         if curve_type == 'line':
             self.enableFillLineButtons(line_name = self.Curve_box.currentText(), new_control_points = user_control_point_values, opacity_alpha_value = user_curve_opacity_alpha_value)
 
@@ -460,6 +512,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
             
         # Specifies the conditions for valid control points for Bezier curves that are considered as lines.
         else:    
+
             # Outputs an error message to the user if the user's inputs for control points 1 and 4 are on the same coordinates for Bezier curves
             # that are considered as lines.
             if user_control_point_values[0][0] == user_control_point_values[3][0] and user_control_point_values[0][1] == user_control_point_values[3][1]:
@@ -469,7 +522,6 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                 failedMessageBox.setStandardButtons(QMessageBox.Ok)
                 failedMessageBox.exec()
                 return 'Invalid'
-
 
             # Evaluates whether either control points 1 and 4 are within the blue dashed lines.
             if (not (user_control_point_values[0][0] < 0 or user_control_point_values[0][0] > self.window_width or user_control_point_values[0][1] < 0 or user_control_point_values[0][1] > self.window_height)
@@ -512,11 +564,11 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         return user_control_point_values, user_curve_opacity_alpha_value
         
     ## Enables buttons under the 'Settings for Filling Area for Lines' label based on the user's control points
-    #  and disables all of the widgets related to Bezier curves, selecting client servers, and switching back to the home screen 
+    #  and disables all of the widgets related to Bezier curves, selecting client servers, and switching back to the main window
     #  for the 'Mask Feed and Geometry Editing' window.
     #  @param line_name The curve name of a user-created Bezier curve that is considered a line under Bezier logic
     #  @param new_control_points The control points of a user-created Bezier curve that is considered a line under Bezier logic
-    #  @param opacity_alpha_value The opacity alpha value of a user-created Bezier curve that is considered a line under Bezier
+    #  @param opacity_alpha_value The opacity alpha value of a user-created Bezier curve that is considered a line under Bezier logic
     def enableFillLineButtons(self, line_name, new_control_points, opacity_alpha_value):
 
         # Disables the comboBoxes and spin box.
@@ -591,48 +643,72 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     ## Creates a list of xy coordinates for filling in the area between the left side of the projection screen and a user-created Bezier curve that considered a line
     #  once the user presses on the 'Left of Line' button. 
     def fillLineAreaLeft(self):
+
+        # Makes the control points for filling the area to the left of a user-created Bezier curve if user's inputs for control point 1 are on the bottom horizontal
+        # blue dashed line.
         if self.line_control_point_1[1] == 0:  
             control_points_line_area = [(0.0, 0.0), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (0.0, self.line_control_point_4[1]), 
-                                        (0.0, 0.0)]                                        
+                                        (0.0, 0.0)]
+        
+        # Makes the control points for filling the area to the left of a user-created Bezier curve if user's inputs for control point 4 are on the bottom horizontal
+        # blue dashed line.                                        
         elif self.line_control_point_4[1] == 0:
             control_points_line_area = [(0.0, 0.0), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (0.0, self.line_control_point_1[1]), 
                                         (0.0, 0.0)]
+        
+        # Makes the control points for filling the area to the left of a user-created Bezier curve if user's inputs for control point 1 are on the top horizontal
+        # blue dashed line.
         elif self.line_control_point_1[1] == float(self.window_height):
             control_points_line_area = [(0.0, float(self.window_height)), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (0.0, self.line_control_point_4[1]), 
                                         (0.0, float(self.window_height))]
+        
+        # Makes the control points for filling the area to the left of a user-created Bezier curve if user's inputs for control point 4 are on the top horizontal
+        # blue dashed line.
         elif self.line_control_point_4[1] == float(self.window_height):
             control_points_line_area = [(0.0, float(self.window_height)), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (0.0, self.line_control_point_1[1]), 
                                         (0.0, float(self.window_height))]
+        
+        # Makes the control points for filling the area to the left of a user-created Bezier curve if user's inputs for control point 1 are on the left vertical
+        # blue dashed line.
         elif self.line_control_point_1[0] == 0:
             control_points_line_area = [(self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]),
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (0.0, self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1])]
+        
+        # Makes the control points for filling the area to the left of a user-created Bezier curve if user's inputs for control point 4 are on the left vertical
+        # blue dashed line.
         elif self.line_control_point_4[0] == 0:
             control_points_line_area = [(self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]),
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (0.0, self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1])]
+        
+        # Makes the control points for filling the area to the left of a user-created Bezier curve if user's inputs for control point 1 are on the right vertical
+        # blue dashed line.
         elif self.line_control_point_1[0] == float(self.window_width):
             control_points_line_area = [(0.0, self.line_control_point_1[1]),
                                         (self.line_control_point_1[0], self.line_control_point_1[1]),
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (0.0, self.line_control_point_4[1]), 
                                         (0.0, self.line_control_point_1[1])]
+        
+        # Makes the control points for filling the area to the left of a user-created Bezier curve if user's inputs for control point 4 are on the right vertical
+        # blue dashed line.
         else:
             control_points_line_area = [(0.0, self.line_control_point_4[1]),
                                         (self.line_control_point_4[0], self.line_control_point_4[1]),
@@ -646,54 +722,78 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     ## Creates a list of xy coordinates for filling in the area between the right side of the projection screen and a user-created Bezier curve that considered a line
     #  once the user presses on the 'Right of Line' button.
     def fillLineAreaRight(self):
+        
+        # Makes the control points for filling the area to the right of a user-created Bezier curve if user's inputs for control point 1 are on the bottom horizontal
+        # blue dashed line.
         if self.line_control_point_1[1] == 0:
             control_points_line_area = [(float(self.window_width), 0.0),  
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (float(self.window_width), self.line_control_point_4[1]),
                                         (float(self.window_width), 0.0)]   
+        
+        # Makes the control points for filling the area to the right of a user-created Bezier curve if user's inputs for control point 4 are on the bottom horizontal
+        # blue dashed line.
         elif self.line_control_point_4[1] == 0: 
             control_points_line_area = [(float(self.window_width), 0.0),  
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (float(self.window_width), self.line_control_point_1[1]),
-                                        (float(self.window_width), 0.0)]      
+                                        (float(self.window_width), 0.0)]   
+
+        # Makes the control points for filling the area to the right of a user-created Bezier curve if user's inputs for control point 1 are on the top horizontal
+        # blue dashed line.   
         elif self.line_control_point_1[1] == float(self.window_height):
             control_points_line_area = [(float(self.window_width), float(self.window_height)), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (float(self.window_width), self.line_control_point_4[1]), 
                                         (float(self.window_width), float(self.window_height))]
+            
+        # Makes the control points for filling the area to the right of a user-created Bezier curve if user's inputs for control point 4 are on the top horizontal
+        # blue dashed line.
         elif self.line_control_point_4[1] == float(self.window_height):
             control_points_line_area = [(float(self.window_width), float(self.window_height)),  
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (float(self.window_width), self.line_control_point_1[1]),
-                                        (float(self.window_width), float(self.window_height))]     
+                                        (float(self.window_width), float(self.window_height))]    
+            
+        # Makes the control points for filling the area to the right of a user-created Bezier curve if user's inputs for control point 1 are on the left vertical 
+        # blue dashed line.
+        elif self.line_control_point_1[0] == 0.0:
+            control_points_line_area = [(float(self.window_width), self.line_control_point_1[1]),  
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (float(self.window_width), self.line_control_point_4[1]),
+                                        (float(self.window_width), self.line_control_point_1[1])] 
+            
+        # Makes the control points for filling the area to the right of a user-created Bezier curve if user's inputs for control point 4 are on the left vertical 
+        # blue dashed line.
+        elif self.line_control_point_4[0] == 0.0:
+            control_points_line_area = [(float(self.window_width), self.line_control_point_4[1]),  
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
+                                        (float(self.window_width), self.line_control_point_1[1]),
+                                        (float(self.window_width), self.line_control_point_4[1])] 
+
+        # Makes the control points for filling the area to the right of a user-created Bezier curve if user's inputs for control point 1 are on the right vertical 
+        # blue dashed line. 
         elif self.line_control_point_1[0] == float(self.window_width):
             control_points_line_area = [(self.line_control_point_1[0], self.line_control_point_1[1]),  
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (float(self.window_width), self.line_control_point_4[1]),
                                         (self.line_control_point_1[0], self.line_control_point_1[1])]  
-        elif self.line_control_point_4[0] == float(self.window_width):
+        
+        # Makes the control points for filling the area to the right of a user-created Bezier curve if user's inputs for control point 4 are on the right vertical
+        # blue dashed line. 
+        else:
             control_points_line_area = [(self.line_control_point_4[0], self.line_control_point_4[1]),  
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (float(self.window_width), self.line_control_point_1[1]),
-                                        (self.line_control_point_4[0], self.line_control_point_4[1])]
-        elif self.line_control_point_1[0] == 0.0:
-            control_points_line_area = [(float(self.window_width), self.line_control_point_1[1]),  
-                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
-                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
-                                        (float(self.window_width), self.line_control_point_4[1]),
-                                        (float(self.window_width), self.line_control_point_1[1])]  
-        else:
-            control_points_line_area = [(float(self.window_width), self.line_control_point_4[1]),  
-                                        (self.line_control_point_4[0], self.line_control_point_4[1]), 
-                                        (self.line_control_point_1[0], self.line_control_point_1[1]), 
-                                        (float(self.window_width), self.line_control_point_1[1]),
-                                        (float(self.window_width), self.line_control_point_4[1])] 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1])] 
             
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
@@ -701,6 +801,9 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     ## Creates a list of xy coordinates for filling in the area between the top side of the projection screen and a user-created Bezier curve that considered a line
     #  once the user presses on the 'Above Line' button.
     def fillLineAreaAbove(self):
+
+        # Makes the control points for filling the area above a user-created Bezier curve if user's inputs for control point 1 are on the left vertical 
+        # blue dashed line.
         if self.line_control_point_1[0] == 0.0:
             control_points_line_area = [(0.0, float(self.window_height)), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
@@ -708,42 +811,62 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
                                         (self.line_control_point_4[0], float(self.window_height)),
                                         (0.0, float(self.window_height))]
             
+        # Makes the control points for filling the area above a user-created Bezier curve if user's inputs for control point 4 are on the left vertical 
+        # blue dashed line.
         elif self.line_control_point_4[0] == 0.0:
             control_points_line_area = [(0.0, float(self.window_height)), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_1[0], float(self.window_height)),
                                         (0.0, float(self.window_height))]
+            
+        # Makes the control points for filling the area above a user-created Bezier curve if user's inputs for control point 1 are on the right vertical 
+        # blue dashed line.
         elif self.line_control_point_1[0] == float(self.window_width):
             control_points_line_area = [(float(self.window_width), float(self.window_height)), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_4[0], float(self.window_height)),
                                         (float(self.window_width), float(self.window_height))]
+            
+        # Makes the control points for filling the area above a user-created Bezier curve if user's inputs for control point 4 are on the right vertical 
+        # blue dashed line.
         elif self.line_control_point_4[0] == float(self.window_width):
             control_points_line_area = [(float(self.window_width), float(self.window_height)), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_1[0], float(self.window_height)),
                                         (float(self.window_width), float(self.window_height))]
+        
+        # Makes the control points for filling the area above a user-created Bezier curve if user's inputs for control point 1 are on the bottom horizontal 
+        # blue dashed line.
         elif self.line_control_point_1[1] == 0.0:
             control_points_line_area = [(self.line_control_point_1[0], float(self.window_height)),
                                         (self.line_control_point_1[0], self.line_control_point_1[1]),
                                         (self.line_control_point_4[0], self.line_control_point_4[1]),
                                         (self.line_control_point_4[0], float(self.window_height)),
                                         (self.line_control_point_1[0], float(self.window_height))]
+            
+        # Makes the control points for filling the area above a user-created Bezier curve if user's inputs for control point 4 are on the bottom horizontal 
+        # blue dashed line.
         elif self.line_control_point_4[1] == 0.0:
             control_points_line_area = [(self.line_control_point_4[0], float(self.window_height)),
                                         (self.line_control_point_4[0], self.line_control_point_4[1]),
                                         (self.line_control_point_1[0], self.line_control_point_1[1]),
                                         (self.line_control_point_1[0], float(self.window_height)),
                                         (self.line_control_point_4[0], float(self.window_height))]
+            
+        # Makes the control points for filling the area above a user-created Bezier curve if user's inputs for control point 1 are on the top horizontal 
+        # blue dashed line.
         elif self.line_control_point_1[1] == float(self.window_height):
             control_points_line_area = [(self.line_control_point_1[0], self.line_control_point_1[1]),
                                         (self.line_control_point_1[0], self.line_control_point_1[1]),
                                         (self.line_control_point_4[0], self.line_control_point_4[1]),
                                         (self.line_control_point_4[0], float(self.window_height)),
                                         (self.line_control_point_1[0], self.line_control_point_1[1])]
+        
+        # Makes the control points for filling the area above a user-created Bezier curve if user's inputs for control point 4 are on the top horizontal 
+        # blue dashed line.
         else:
             control_points_line_area = [(self.line_control_point_4[0], self.line_control_point_4[1]),
                                         (self.line_control_point_4[0], self.line_control_point_4[1]),
@@ -757,54 +880,78 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     ## Creates a list of xy coordinates for filling in the area between the bottom side of the projection screen and a user-created Bezier curve that considered a line
     #  once the user presses on the 'Below Line' button.
     def fillLineAreaBelow(self):
+
+        # Makes the control points for filling the area below a user-created Bezier curve if user's inputs for control point 1 are on the left vertical
+        # blue dashed line.
         if self.line_control_point_1[0] == 0.0:
             control_points_line_area = [(0.0, 0.0), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_4[0], 0.0),
                                         (0.0, 0.0)]
+            
+        # Makes the control points for filling the area below a user-created Bezier curve if user's inputs for control point 4 are on the left vertical
+        # blue dashed line.
         elif self.line_control_point_4[0] == 0.0:
             control_points_line_area = [(0.0, 0.0), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_1[0], 0.0),
                                         (0.0, 0.0)]
+            
+        # Makes the control points for filling the area below a user-created Bezier curve if user's inputs for control point 1 are on the right vertical
+        # blue dashed line.
         elif self.line_control_point_1[0] == float(self.window_width):
             control_points_line_area = [(float(self.window_width), 0.0), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_4[0], 0.0),
                                         (float(self.window_width), 0.0)]
+        
+        # Makes the control points for filling the area below a user-created Bezier curve if user's inputs for control point 4 are on the right vertical
+        # blue dashed line.
         elif self.line_control_point_4[0] == float(self.window_width):
             control_points_line_area = [(float(self.window_width), 0.0), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_1[0], 0.0),
                                         (float(self.window_width), 0.0)]
-        elif self.line_control_point_1[1] == float(self.window_height):
-            control_points_line_area = [(self.line_control_point_1[0], 0.0), 
-                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
-                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
-                                        (self.line_control_point_4[0], 0.0),
-                                        (self.line_control_point_1[0], 0.0)]
-        elif self.line_control_point_4[1] == float(self.window_height):
-            control_points_line_area = [(self.line_control_point_4[0], 0.0), 
-                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
-                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
-                                        (self.line_control_point_1[0], 0.0),
-                                        (self.line_control_point_4[0], 0.0)]
+        
+        # Makes the control points for filling the area below a user-created Bezier curve if user's inputs for control point 1 are on the bottom horizontal
+        # blue dashed line.
         elif self.line_control_point_1[1] == 0.0:
             control_points_line_area = [(self.line_control_point_1[0], self.line_control_point_1[1]), 
                                         (self.line_control_point_1[0], self.line_control_point_1[1]),
                                         (self.line_control_point_4[0], self.line_control_point_4[1]),
                                         (self.line_control_point_4[0], 0.0),
                                         (self.line_control_point_1[0], self.line_control_point_1[1])]
-        else:
+        
+        # Makes the control points for filling the area below a user-created Bezier curve if user's inputs for control point 4 are on the bottom horizontal
+        # blue dashed line.
+        elif self.line_control_point_4[1] == 0.0:
             control_points_line_area = [(self.line_control_point_4[0], self.line_control_point_4[1]), 
                                         (self.line_control_point_4[0], self.line_control_point_4[1]),
                                         (self.line_control_point_1[0], self.line_control_point_1[1]),
                                         (self.line_control_point_1[0], 0.0),
-                                        (self.line_control_point_4[0], self.line_control_point_4[1])]      
+                                        (self.line_control_point_4[0], self.line_control_point_4[1])]    
+
+        # Makes the control points for filling the area below a user-created Bezier curve if user's inputs for control point 1 are on the top horizontal
+        # blue dashed line.
+        elif self.line_control_point_1[1] == float(self.window_height):
+            control_points_line_area = [(self.line_control_point_1[0], 0.0), 
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_4[0], 0.0),
+                                        (self.line_control_point_1[0], 0.0)]
+            
+        # Makes the control points for filling the area below a user-created Bezier curve if user's inputs for control point 4 are on the top horizontal
+        # blue dashed line.
+        else:
+            control_points_line_area = [(self.line_control_point_4[0], 0.0), 
+                                        (self.line_control_point_4[0], self.line_control_point_4[1]),
+                                        (self.line_control_point_1[0], self.line_control_point_1[1]),
+                                        (self.line_control_point_1[0], 0.0),
+                                        (self.line_control_point_4[0], 0.0)]  
         
         self.makeFillArea(control_points_line_area)
         self.SendInfo()
@@ -1242,8 +1389,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
             self.control_point_3_y_line.setText(self.control_point_1_y_line.text())
 
     ## Client combo box text changed signal
-    #
-    # Checks whether the client combo box was changed and updates the bezier info from that particular client
+    # Checks whether the client combo box was changed and updates the Bezier info from that particular client
     def clientComboBoxChanged(self):
         # Resets the axes and curves
         self.axes.clear()
@@ -1254,7 +1400,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.line_mode_on = False
         self.line_mode_click_count_parity = 0
 
-        # Attempt to connect to the new client to retrieve bezier information.
+        # Attempt to connect to the new client to retrieve Bezier information.
         try:
             self.GetInfo()
 
@@ -1271,7 +1417,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
             self.Show_areas_btn.setEnabled(True)
             self.Show_control_points_btn.setEnabled(True)
 
-            # Sets the bezier curves according to the bezer information retrieved.
+            # Sets the Bezier curves according to the bezer information retrieved.
             if(self.control_points_list or self.line_area_points):
                 for pointName, pointValue in self.control_points_list.items():
                     self.bezier_curves[pointName] = PathPatch(Path(pointValue[0], [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]), fc = 'none', transform = self.axes.transData)
@@ -1315,7 +1461,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.Curve_box.clear()
         self.Curve_box.addItems(list(self.bezier_curves.keys()))
 
-        # Set the text boxes to the new bezier information
+        # Set the text boxes to the new Bezier information
         self.setTextBoxes()  
         
         # Redraw the canvas.
@@ -1328,9 +1474,9 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     NETWORKING
     '''
 
-    ## Retrieves bezier curve information from a given client
+    ## Retrieves Bezier curve information from a given client
     #
-    # Uses the Clients combo box (Client_projectors_box) and the client_IP.txt file to get the current client
+    # Uses the Clients combo box (Client_projectors_box) and the client_ip.txt file to get the current client
     def GetInfo(self):
         ## IP of the currently selected client
         clientIP = self.client_servers_IP_addresses[self.Client_projectors_box.currentText()]
@@ -1359,7 +1505,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.boundaries_x = [0, 0, self.window_width, self.window_width, 0]
         self.boundaries_y = [self.window_height, 0, 0, self.window_height, self.window_height]
 
-    ## Sends bezier curve information to a given client
+    ## Sends Bezier curve information to a given client
     #
     # Uses the Clients combo box (Client_projectors_box) and the client_IP.txt file to get the current client
     def SendInfo(self):
@@ -1371,7 +1517,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
         self.tcpSocket.connectToHost(clientIP, self.PORT, QIODevice.ReadWrite)
         self.tcpSocket.waitForConnected(5000)
 
-        ## Variable containing bezier information to send to client
+        ## Variable containing Bezier information to send to client
         toSend = [self.control_points_list, self.line_area_points]
         toSend = pickle.dumps(toSend, -1)
 
@@ -1392,6 +1538,7 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 # PROJECTOR CONFIGURATION
 '''
 
+## Represents the 'Projector Configuration - Planetarium Edge Blend' window for the host GUI.
 class ProjectorConfigurationWindow(QMainWindow):
     def __init__(self):
         super(ProjectorConfigurationWindow, self).__init__()
