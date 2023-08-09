@@ -374,7 +374,11 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
 
     ## Edits the Bezier curve that the user has select in the Curve_box comboBox based on the user's inputs for the line edit fields and opacity spin box and plots it on the mask graph.
     #  This happens once the user clicks on the 'Set curve' button.
-    def setCurve(self):      
+    def setCurve(self):   
+        
+        # Stops the function call if the user doesn't have any Bezier curves to edit.
+        if self.Curve_box.currentText() == 'No Curves':
+            return
 
         # Checks whether the values in the line edit fields are valid.
         # If the values are valid, then the convertUserInputsForCurve() function is called to convert the user values.
@@ -1009,6 +1013,10 @@ class MaskFeedAndGeometryEditingWindow(QMainWindow):
     ## Deletes the Bezier curve that the user has select in the Curve_box comboBox and updates the names of all curves after the Bezier curve that the user has selected.
     #  This happens once the user presses the 'Remove curve' button.
     def removeCurve(self):
+
+        # Stops the function call if the user doesn't have any Bezier curves to remove.
+        if self.Curve_box.currentText() == 'No Curves':
+            return
 
         # Saves the number and name of the Bezier curve that the user has select in the Curve_box comboBox to remove.
         removed_curve_number = int(str.split(self.Curve_box.currentText(), ' ')[1])
