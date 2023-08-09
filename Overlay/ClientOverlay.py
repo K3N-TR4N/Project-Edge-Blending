@@ -1,24 +1,19 @@
-from array import array
-import fileinput
 import sys
-import os
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 from PyQt5.QtGui import QPixmap
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt, QEvent, QObject
+from PyQt5.QtCore import Qt
 from PyQt5.QtNetwork import QHostAddress, QTcpServer
-from PyQt5.QtCore import QByteArray, QDataStream, QIODevice
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-import matplotlib
 import matplotlib.pyplot as plt 
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 
-import socket
 import pickle
 from win32api import GetSystemMetrics
 
+## Represents the client mask overlay window.
 class ImageWindow(QMainWindow):
     def __init__(self):
         super().__init__()
