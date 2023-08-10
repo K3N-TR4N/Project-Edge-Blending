@@ -3,13 +3,13 @@ This project is a tool made for the University of Texas at Arlington's Planetari
 ## Installation
 There are two main programs used in this project, a graphical user interface for making masks intended for a host computer, as well as the client overlay that applies the mask on client computers.
 ### Host GUI
-Locate the "Host GUI" folder. Choose a location on your **HOST** computer to copy this folder to (it can be anywhere). Within this folder there are two items, a folder called "data" that contains the files needed to run the program, and a shortcut to EdgeBlendingGUI.exe. You can ignore the data folder. The exe shortcut is used to run the program. For ease of access, you can right click it and "Pin To Start".
+Locate the "Host GUI" folder. Choose a location on your **HOST** computer to copy this folder to (it can be anywhere). Within this folder there is another folder called "data". Open the data folder and find an executable file named "HostGUI.exe". Right click and create a shortcut of this executable file, then copy and paste the shortcut back in the HostGUI folder. For ease of access, right click the shortcut and click the "Pin To Start" option. 
 ### Client Overlay
 **The following must be done on each client you wish to use this program with:**
 1. Locate the "Client Overlay" folder.
 2. Choose a location on the given client computer to copy this folder to (it can be anywhere).
-3. As with the Host GUI, ignore the data folder. The shortcut to EdgeBlendingClient.exe will be the only relevant file. Run the file to ensure it works.
-4. (do the following when ready to use the software full-time) Right click on the EdgeBlendingClient.exe shortcut and click copy.
+3. As with the Host GUI, open the data folder. Locate the "ClientOverlay.exe" file and create a shortcut of it.
+4. (do the following when ready to use the software full-time) Right click on the ClientOverlay.exe shortcut and click copy.
 5. Press Windows Key + R at the same time to bring up the run dialog.
 6. Type in shell:startup and hit OK.
 7. Paste the file into the folder that opened. This will ensure that the client overlay application opens each time the client computer is restarted.
